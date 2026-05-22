@@ -1,520 +1,965 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+>
+
 <title>TELEPOSTS</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link
+href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+rel="stylesheet"
+>
+
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
 :root{
+
   --bg:#fafafa;
   --surface:#fff;
   --border:#efefef;
+
   --text:#111;
-  --text2:#555;
+  --text2:#666;
   --text3:#999;
+
   --accent:#0095f6;
-  --tag-bg:#f0f2f5;
-  --header-h:52px;
-  --tags-h:44px;
+
 }
-@media(prefers-color-scheme:dark){
-  :root{
-    --bg:#0a0a0a;--surface:#141414;--border:#242424;
-    --text:#f0f0f0;--text2:#aaa;--text3:#555;--tag-bg:#1e1e1e;
-  }
+
+body{
+
+  font-family:'Inter',sans-serif;
+
+  background:var(--bg);
+
+  color:var(--text);
+
 }
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
 /* HEADER */
-.header{
-  position:sticky;top:0;z-index:999;
-  background:var(--surface);border-bottom:1px solid var(--border);
-  height:var(--header-h);
-  display:flex;align-items:center;padding:0 14px;gap:10px;
-}
-.logo{font-size:17px;font-weight:700;flex-shrink:0;color:var(--text)}
-.logo span{color:var(--accent)}
-.search-wrap{flex:1;position:relative;min-width:0}
-.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--text3);fill:none;stroke-width:2;stroke-linecap:round;pointer-events:none}
-.search{width:100%;padding:7px 10px 7px 30px;border:1px solid var(--border);border-radius:20px;background:var(--tag-bg);color:var(--text);font-size:13px;outline:none;font-family:'Inter',sans-serif}
-.search:focus{border-color:var(--accent)}
-.header-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.shuffle-btn{
-  width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;
-  background:var(--tag-bg);color:var(--text2);
-  display:flex;align-items:center;justify-content:center;
-  font-size:16px;transition:all .2s;
-}
-.shuffle-btn:hover{background:var(--accent);color:#fff}
 
-/* TAGS */
-.tags-bar{
-  position:sticky;top:var(--header-h);z-index:998;
-  background:var(--surface);border-bottom:1px solid var(--border);
-  height:var(--tags-h);
-  display:flex;align-items:center;gap:6px;
-  padding:0 12px;overflow-x:auto;scrollbar-width:none;
+.header{
+
+  position:sticky;
+  top:0;
+  z-index:999;
+
+  background:var(--surface);
+
+  border-bottom:
+  1px solid var(--border);
+
+  display:flex;
+  align-items:center;
+  gap:12px;
+
+  padding:12px;
+
 }
-.tags-bar::-webkit-scrollbar{display:none}
-.tag{
-  flex-shrink:0;padding:4px 12px;border-radius:20px;
-  font-size:12px;font-weight:500;cursor:pointer;
-  background:var(--tag-bg);color:var(--text2);
-  border:1px solid transparent;transition:all .15s;
+
+.logo{
+
+  font-size:20px;
+  font-weight:700;
+
 }
-.tag:hover{border-color:var(--accent);color:var(--accent)}
-.tag.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.logo span{
+
+  color:var(--accent);
+
+}
+
+.search{
+
+  flex:1;
+
+  padding:10px 14px;
+
+  border:none;
+
+  border-radius:14px;
+
+  background:#f1f3f5;
+
+  outline:none;
+
+  font-size:14px;
+
+}
+
+.sort{
+
+  padding:10px 14px;
+
+  border:none;
+
+  border-radius:14px;
+
+  background:#f1f3f5;
+
+  outline:none;
+
+  font-size:14px;
+
+  cursor:pointer;
+
+}
 
 /* FEED */
+
 .feed{
-  max-width:600px;margin:0 auto;
-  padding:12px 0 40px;
-  display:flex;flex-direction:column;gap:0;
+
+  max-width:650px;
+
+  margin:auto;
+
+  padding-bottom:40px;
+
 }
 
-/* POST CARD */
+/* CARD */
+
 .post-card{
+
   background:var(--surface);
-  border-bottom:1px solid var(--border);
+
+  border-bottom:
+  1px solid var(--border);
+
   overflow:hidden;
-  transition:opacity .2s;
-}
-.post-card.loading-card{opacity:.5}
 
-/* Card header */
+}
+
+/* HEAD */
+
 .post-head{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 14px;
+
+  display:flex;
+  align-items:center;
+  gap:12px;
+
+  padding:14px;
+
 }
+
 .avatar{
-  width:38px;height:38px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:14px;font-weight:700;color:#fff;
-  flex-shrink:0;cursor:pointer;
-}
-.post-meta{flex:1;min-width:0}
-.post-channel{
-  font-size:14px;font-weight:600;cursor:pointer;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  color:var(--text);text-decoration:none;display:block;
-}
-.post-channel:hover{color:var(--accent)}
-.post-date{font-size:11px;color:var(--text3);margin-top:1px}
-.tg-btn{
+
+  width:42px;
+  height:42px;
+
+  border-radius:50%;
+
+  background:linear-gradient(
+    135deg,
+    #0095f6,
+    #7c3aed
+  );
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  color:white;
+
+  font-size:14px;
+  font-weight:700;
+
   flex-shrink:0;
-  padding:5px 12px;border-radius:20px;
-  background:var(--accent);color:#fff;
-  font-size:12px;font-weight:600;
-  text-decoration:none;border:none;cursor:pointer;
-  transition:opacity .2s;
-}
-.tg-btn:hover{opacity:.85}
 
-/* Post image */
-.post-img{
-  width:100%;display:block;
-  max-height:400px;object-fit:cover;
-  background:var(--tag-bg);
 }
 
-/* Post text */
-.post-text{
-  padding:10px 14px;
-  font-size:14px;line-height:1.55;
+.post-meta{
+
+  flex:1;
+  min-width:0;
+
+}
+
+.post-channel{
+
+  font-size:14px;
+  font-weight:600;
+
   color:var(--text);
+
+  text-decoration:none;
+
+  display:block;
+
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+
+}
+
+.post-date{
+
+  font-size:11px;
+
+  color:var(--text3);
+
+  margin-top:2px;
+
+}
+
+.open-btn{
+
+  padding:8px 14px;
+
+  border-radius:20px;
+
+  background:var(--accent);
+
+  color:white;
+
+  text-decoration:none;
+
+  font-size:12px;
+  font-weight:600;
+
+  flex-shrink:0;
+
+}
+
+/* IMAGE */
+
+.post-img{
+
+  width:100%;
+
+  max-height:450px;
+
+  object-fit:cover;
+
+  display:block;
+
+  background:#eee;
+
+}
+
+/* TEXT */
+
+.post-text{
+
+  padding:14px;
+
+  font-size:14px;
+
+  line-height:1.6;
+
   word-break:break-word;
-}
-.post-text a{color:var(--accent);text-decoration:none}
-.post-text.truncated{
-  display:-webkit-box;-webkit-line-clamp:4;
-  -webkit-box-orient:vertical;overflow:hidden;
-}
-.read-more{
-  padding:0 14px 10px;
-  font-size:13px;color:var(--accent);cursor:pointer;
-  display:inline-block;
+
 }
 
-/* Post footer */
+.post-text a{
+
+  color:var(--accent);
+
+  text-decoration:none;
+
+}
+
+/* FOOT */
+
 .post-foot{
-  display:flex;align-items:center;gap:14px;
-  padding:8px 14px 12px;
-}
-.post-stat{
-  display:flex;align-items:center;gap:4px;
-  font-size:12px;color:var(--text3);
-}
-.post-stat svg{width:14px;height:14px;stroke:var(--text3);fill:none;stroke-width:1.8;stroke-linecap:round}
 
-/* Skeleton */
-.skeleton{
-  background:var(--surface);border-bottom:1px solid var(--border);
-  padding:10px 14px;
-}
-.skel-line{
-  background:var(--tag-bg);border-radius:6px;
-  animation:pulse 1.4s ease-in-out infinite;
-}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.skel-avatar{width:38px;height:38px;border-radius:50%;background:var(--tag-bg);animation:pulse 1.4s ease-in-out infinite;flex-shrink:0}
-.skel-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.skel-img{width:100%;height:200px;background:var(--tag-bg);animation:pulse 1.4s ease-in-out infinite;margin-bottom:10px}
+  padding:0 14px 14px;
 
-/* Load more */
-.load-more-wrap{
-  padding:20px;text-align:center;
 }
-.load-more-btn{
-  padding:10px 28px;border-radius:24px;
-  border:1.5px solid var(--accent);
-  background:transparent;color:var(--accent);
-  font-size:14px;font-weight:600;cursor:pointer;
-  font-family:'Inter',sans-serif;transition:all .2s;
-}
-.load-more-btn:hover{background:var(--accent);color:#fff}
-.load-more-btn:disabled{opacity:.4;cursor:default}
 
-/* Empty */
-.empty{padding:60px 20px;text-align:center;color:var(--text3);font-size:14px}
+.views{
 
-/* Error card */
-.error-card{
-  background:var(--surface);border-bottom:1px solid var(--border);
-  padding:16px;display:flex;align-items:center;gap:12px;
-  opacity:.5;
+  font-size:12px;
+
+  color:var(--text3);
+
 }
+
+/* BUTTON */
+
+.load-wrap{
+
+  padding:24px;
+
+  text-align:center;
+
+}
+
+.load-btn{
+
+  padding:12px 26px;
+
+  border:none;
+
+  border-radius:30px;
+
+  background:var(--accent);
+
+  color:white;
+
+  font-size:14px;
+  font-weight:600;
+
+  cursor:pointer;
+
+}
+
+/* MOBILE */
+
+@media(max-width:768px){
+
+  .header{
+
+    flex-wrap:wrap;
+
+  }
+
+  .search{
+
+    width:100%;
+
+  }
+
+  .sort{
+
+    width:100%;
+
+  }
+
+}
+
 </style>
+
 </head>
+
 <body>
 
 <header class="header">
-  <div class="logo">TELE<span>POSTS</span></div>
-  <div class="search-wrap">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input type="text" id="search" class="search" placeholder="Search channels…" autocomplete="off">
-  </div>
-  <div class="header-right">
-    <button class="shuffle-btn" id="shuffleBtn" title="Shuffle feed">🔀</button>
-  </div>
+
+<div class="logo">
+
+  TELE<span>POSTS</span>
+
+</div>
+
+<input
+type="text"
+id="search"
+class="search"
+placeholder="Search channels..."
+>
+
+<select
+id="sortSelect"
+class="sort"
+>
+
+  <option value="random">
+    🔀 Random
+  </option>
+
+  <option value="views">
+    🔥 Most Viewed
+  </option>
+
+  <option value="az">
+    🔤 A-Z
+  </option>
+
+</select>
+
 </header>
 
-<div class="tags-bar" id="tagsBar"></div>
-<div class="feed" id="feed"></div>
+<div
+id="feed"
+class="feed"
+>
+</div>
 
 <script>
-const WORKER = 'https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=';
+
+const WORKER =
+'https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=';
+
 const BATCH = 10;
-const TAGS = [
-  {id:'all',label:'✨ All'},
-  {id:'news',label:'📰 News',kw:['news','نيوز','أخبار','akhbar','press','media','جريدة']},
-  {id:'tech',label:'💻 Tech',kw:['tech','تقنية','technology','dev','programming','code','برمجة']},
-  {id:'sport',label:'⚽ Sports',kw:['sport','كورة','football','soccer','رياضة','yalla','يلا']},
-  {id:'music',label:'🎵 Music',kw:['music','موسيقى','songs','اغاني','rap','audio']},
-  {id:'film',label:'🎬 Film',kw:['film','movie','series','مسلسل','افلام','drama','سينما']},
-  {id:'games',label:'🎮 Games',kw:['game','games','gaming','ppsspp','pubg','العاب','لعبة']},
-  {id:'crypto',label:'💰 Crypto',kw:['crypto','bitcoin','btc','eth','coin','عملة','binance']},
-  {id:'edu',label:'📚 Edu',kw:['edu','تعليم','learn','courses','كورس','tutorial','school']},
-  {id:'fun',label:'😂 Fun',kw:['fun','meme','funny','ميم','نكتة','humor','comedy']},
-  {id:'jobs',label:'💼 Jobs',kw:['job','وظ','career','hire','recruitment','vacancy']},
-];
 
 let allChannels = [];
+
 let filteredChannels = [];
+
 let usedIndexes = new Set();
-let activeTag = 'all';
+
 let isLoading = false;
+
 let searchQ = '';
 
-// ── Helpers ──────────────────────────────────────────────
-function shuffle(arr){ return arr.slice().sort(()=>Math.random()-.5) }
+// ─────────────────────────────
+// HELPERS
+// ─────────────────────────────
 
-function avatarGrad(u){
-  const palettes=[['#0095f6','#a855f7'],['#f59e0b','#ef4444'],['#10b981','#0ea5e9'],
-    ['#8b5cf6','#ec4899'],['#06b6d4','#6366f1'],['#f97316','#eab308']];
-  let h=0; for(let c of(u||'')) h=(h*31+c.charCodeAt(0))&0xffffff;
-  const p=palettes[h%palettes.length];
-  return `linear-gradient(135deg,${p[0]},${p[1]})`;
+function shuffle(arr){
+
+  return arr
+  .slice()
+  .sort(()=>Math.random()-.5)
+
 }
+
 function avatarText(t){
+
   if(!t) return '?';
-  const w=t.trim().split(/\s+/);
-  return w.length>=2?(w[0][0]+w[1][0]).toUpperCase():t.slice(0,2).toUpperCase();
+
+  return t
+  .slice(0,2)
+  .toUpperCase()
+
 }
-function matchTag(ch,tagId){
-  if(tagId==='all') return true;
-  const tag=TAGS.find(t=>t.id===tagId); if(!tag) return true;
-  const hay=((ch.title||'')+(ch.username||'')).toLowerCase();
-  return tag.kw.some(k=>hay.includes(k));
-}
+
 function matchSearch(ch,q){
+
   if(!q) return true;
-  return (ch.title||'').toLowerCase().includes(q)||(ch.username||'').toLowerCase().includes(q);
+
+  return (
+
+    (ch.title || '')
+    .toLowerCase()
+    .includes(q)
+
+    ||
+
+    (ch.username || '')
+    .toLowerCase()
+    .includes(q)
+
+  )
+
 }
 
-// ── Parse last post from HTML ─────────────────────────────
+// ─────────────────────────────
+// PARSE TELEGRAM HTML
+// ─────────────────────────────
+
 function parseLastPost(html){
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html,'text/html');
 
-  // Get all post wrappers
-  const posts = doc.querySelectorAll('.tgme_widget_message_wrap');
-  if(!posts.length) return null;
+  const parser =
+  new DOMParser();
 
-  // Last post
-  const last = posts[posts.length-1];
+  const doc =
+  parser.parseFromString(
+    html,
+    'text/html'
+  );
 
-  // Text
+  const posts =
+  doc.querySelectorAll(
+    '.tgme_widget_message_wrap'
+  );
+
+  if(!posts.length)
+    return null;
+
+  const last =
+  posts[posts.length - 1];
+
   let text = '';
-  const textEl = last.querySelector('.tgme_widget_message_text');
-  if(textEl) text = textEl.innerHTML.trim();
 
-  // Image
+  const textEl =
+  last.querySelector(
+    '.tgme_widget_message_text'
+  );
+
+  if(textEl){
+
+    text =
+    textEl.innerHTML.trim();
+
+  }
+
   let img = null;
-  const imgEl = last.querySelector('.tgme_widget_message_photo_wrap');
+
+  const imgEl =
+  last.querySelector(
+    '.tgme_widget_message_photo_wrap'
+  );
+
   if(imgEl){
-    const style = imgEl.getAttribute('style')||'';
-    const m = style.match(/url\(['"]?([^'")\s]+)['"]?\)/);
-    if(m) img = m[1];
-  }
-  // video preview
-  if(!img){
-    const vidEl = last.querySelector('.tgme_widget_message_video_thumb');
-    if(vidEl){
-      const style = vidEl.getAttribute('style')||'';
-      const m = style.match(/url\(['"]?([^'")\s]+)['"]?\)/);
-      if(m) img = m[1];
+
+    const style =
+    imgEl.getAttribute(
+      'style'
+    ) || '';
+
+    const match =
+    style.match(
+      /url\(['"]?([^'")]+)['"]?\)/
+    );
+
+    if(match){
+
+      img = match[1];
+
     }
+
   }
 
-  // Date
   let date = '';
-  const dateEl = last.querySelector('.tgme_widget_message_date time');
-  if(dateEl) date = dateEl.getAttribute('datetime')||dateEl.textContent||'';
 
-  // Views
-  let views = '';
-  const viewEl = last.querySelector('.tgme_widget_message_views');
-  if(viewEl) views = viewEl.textContent.trim();
+  const dateEl =
+  last.querySelector(
+    '.tgme_widget_message_date time'
+  );
 
-  return {text, img, date, views};
-}
+  if(dateEl){
 
-function formatDate(d){
-  if(!d) return '';
-  try{
-    const dt = new Date(d);
-    const now = new Date();
-    const diff = (now-dt)/1000;
-    if(diff<60) return 'Just now';
-    if(diff<3600) return Math.floor(diff/60)+'m ago';
-    if(diff<86400) return Math.floor(diff/3600)+'h ago';
-    if(diff<604800) return Math.floor(diff/86400)+'d ago';
-    return dt.toLocaleDateString('en',{month:'short',day:'numeric'});
-  }catch(e){return d}
-}
+    date =
+    dateEl.getAttribute(
+      'datetime'
+    ) || '';
 
-// ── Skeleton ──────────────────────────────────────────────
-function makeSkeleton(){
-  const d=document.createElement('div');
-  d.className='skeleton';
-  d.innerHTML=`
-    <div class="skel-head">
-      <div class="skel-avatar"></div>
-      <div style="flex:1">
-        <div class="skel-line" style="height:12px;width:60%;margin-bottom:6px"></div>
-        <div class="skel-line" style="height:10px;width:35%"></div>
-      </div>
-    </div>
-    <div class="skel-img"></div>
-    <div class="skel-line" style="height:10px;width:90%;margin-bottom:6px"></div>
-    <div class="skel-line" style="height:10px;width:70%"></div>
-  `;
-  return d;
-}
-
-// ── Render single post card ───────────────────────────────
-function makeCard(channel, post){
-  const {username, title} = channel;
-  const card = document.createElement('div');
-  card.className='post-card';
-
-  const dateStr = formatDate(post.date);
-
-  // Truncate long text
-  const longText = post.text && post.text.length > 300;
-
-  card.innerHTML=`
-    <div class="post-head">
-      <div class="avatar" style="background:${avatarGrad(username)}" data-user="${username}">
-        ${avatarText(title||username)}
-      </div>
-      <div class="post-meta">
-        <a class="post-channel" href="https://t.me/${username}" target="_blank">${title||username}</a>
-        ${dateStr?`<div class="post-date">${dateStr}</div>`:''}
-      </div>
-      <a class="tg-btn" href="https://t.me/${username}" target="_blank">Open</a>
-    </div>
-    ${post.img?`<img class="post-img" src="${post.img}" loading="lazy" onerror="this.style.display='none'">`:'' }
-    ${post.text?`
-      <div class="post-text${longText?' truncated':''}">${post.text}</div>
-      ${longText?`<span class="read-more">Read more</span>`:''}
-    `:''}
-    <div class="post-foot">
-      ${post.views?`
-        <div class="post-stat">
-          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          ${post.views}
-        </div>`:''
-      }
-    </div>
-  `;
-
-  // Read more toggle
-  const textEl = card.querySelector('.post-text');
-  const readMore = card.querySelector('.read-more');
-  if(readMore && textEl){
-    readMore.addEventListener('click',()=>{
-      textEl.classList.remove('truncated');
-      readMore.remove();
-    });
   }
+
+  let views = '';
+
+  const viewEl =
+  last.querySelector(
+    '.tgme_widget_message_views'
+  );
+
+  if(viewEl){
+
+    views =
+    viewEl.textContent.trim();
+
+  }
+
+  return {
+
+    text,
+    img,
+    date,
+    views
+
+  }
+
+}
+
+// ─────────────────────────────
+// RENDER CARD
+// ─────────────────────────────
+
+function makeCard(channel,post){
+
+  const card =
+  document.createElement('div');
+
+  card.className =
+  'post-card';
+
+  card.innerHTML = `
+
+    <div class="post-head">
+
+      <div class="avatar">
+
+        ${avatarText(
+          channel.title ||
+          channel.username
+        )}
+
+      </div>
+
+      <div class="post-meta">
+
+        <a
+        class="post-channel"
+        href="https://t.me/${channel.username}"
+        target="_blank"
+        >
+
+        ${channel.title || channel.username}
+
+        </a>
+
+        <div class="post-date">
+
+          ${post.date || ''}
+
+        </div>
+
+      </div>
+
+      <a
+      class="open-btn"
+      href="https://t.me/${channel.username}"
+      target="_blank"
+      >
+
+      Open
+
+      </a>
+
+    </div>
+
+    ${
+      post.img
+
+      ?
+
+      `<img
+        class="post-img"
+        src="${post.img}"
+        loading="lazy"
+      >`
+
+      :
+
+      ''
+    }
+
+    ${
+      post.text
+
+      ?
+
+      `<div class="post-text">
+
+        ${post.text}
+
+      </div>`
+
+      :
+
+      ''
+    }
+
+    <div class="post-foot">
+
+      <div class="views">
+
+        👁️ ${post.views || 0}
+
+      </div>
+
+    </div>
+
+  `;
 
   return card;
+
 }
 
-// ── Fetch & render one channel ────────────────────────────
-async function fetchAndRender(channel, insertBefore){
-  const feed = document.getElementById('feed');
-  const skel = makeSkeleton();
+// ─────────────────────────────
+// FETCH
+// ─────────────────────────────
 
-  if(insertBefore) feed.insertBefore(skel, insertBefore);
-  else feed.insertBefore(skel, document.getElementById('loadMoreWrap'));
+async function fetchAndRender(channel){
 
   try{
-    const res = await fetch(WORKER + channel.username, {signal: AbortSignal.timeout(8000)});
-    const html = await res.text();
-    const post = parseLastPost(html);
 
-    skel.remove();
+    const res =
+    await fetch(
 
-    if(!post || (!post.text && !post.img)){
-      // skip silently — channel has no parseable posts
-      return false;
+      WORKER +
+      channel.username,
+
+      {
+        signal:
+        AbortSignal.timeout(8000)
+      }
+
+    );
+
+    const html =
+    await res.text();
+
+    const post =
+    parseLastPost(html);
+
+    if(
+      !post
+      ||
+      (
+        !post.text
+        &&
+        !post.img
+      )
+    ){
+
+      return;
+
     }
 
-    const card = makeCard(channel, post);
-    if(insertBefore) feed.insertBefore(card, insertBefore);
-    else feed.insertBefore(card, document.getElementById('loadMoreWrap'));
-    return true;
+    channel.lastViews =
+    parseInt(
+
+      (post.views || '0')
+      .replace(/[^\d]/g,'')
+
+    ) || 0;
+
+    const card =
+    makeCard(channel,post);
+
+    document
+    .getElementById('feed')
+    .appendChild(card);
 
   }catch(e){
-    skel.remove();
-    return false;
+
+    console.log(e);
+
   }
+
 }
 
-// ── Load a batch ──────────────────────────────────────────
+// ─────────────────────────────
+// LOAD BATCH
+// ─────────────────────────────
+
 async function loadBatch(){
-  if(isLoading) return;
+
+  if(isLoading)
+    return;
+
   isLoading = true;
 
-  const btn = document.getElementById('loadMoreBtn');
-  if(btn){ btn.disabled=true; btn.textContent='Loading…'; }
+  const btn =
+  document.getElementById(
+    'loadBtn'
+  );
 
-  // Pick next BATCH channels not used yet
-  let loaded = 0;
-  let attempts = 0;
-  const maxAttempts = filteredChannels.length;
+  if(btn){
 
-  while(loaded < BATCH && attempts < maxAttempts){
-    // Find next unused index
-    let idx = -1;
-    for(let i=0;i<filteredChannels.length;i++){
-      if(!usedIndexes.has(i)){ idx=i; break; }
-    }
-    if(idx===-1) break; // all used
+    btn.disabled = true;
 
-    usedIndexes.add(idx);
-    attempts++;
+    btn.innerText =
+    'Loading...';
 
-    const ok = await fetchAndRender(filteredChannels[idx], null);
-    if(ok) loaded++;
   }
+
+  const pending = [];
+
+  for(
+    let i=0;
+    i<filteredChannels.length;
+    i++
+  ){
+
+    if(
+      pending.length >= BATCH
+    ) break;
+
+    if(
+      usedIndexes.has(i)
+    ) continue;
+
+    usedIndexes.add(i);
+
+    pending.push(
+
+      fetchAndRender(
+        filteredChannels[i]
+      )
+
+    );
+
+  }
+
+  await Promise.allSettled(
+    pending
+  );
 
   isLoading = false;
+
   if(btn){
+
     btn.disabled = false;
-    btn.textContent = usedIndexes.size >= filteredChannels.length ? 'No more posts' : 'Load more';
-    if(usedIndexes.size >= filteredChannels.length) btn.disabled = true;
+
+    btn.innerText =
+    'Load More';
+
   }
+
 }
 
-// ── Init feed ─────────────────────────────────────────────
+// ─────────────────────────────
+// INIT FEED
+// ─────────────────────────────
+
 function initFeed(){
+
   usedIndexes.clear();
-  const feed = document.getElementById('feed');
+
+  const feed =
+  document.getElementById(
+    'feed'
+  );
+
   feed.innerHTML = '';
 
-  // Add load more button
-  const wrap = document.createElement('div');
-  wrap.className='load-more-wrap'; wrap.id='loadMoreWrap';
-  const btn = document.createElement('button');
-  btn.className='load-more-btn'; btn.id='loadMoreBtn';
-  btn.textContent='Load more';
-  btn.onclick = loadBatch;
-  wrap.appendChild(btn);
+  const wrap =
+  document.createElement(
+    'div'
+  );
+
+  wrap.className =
+  'load-wrap';
+
+  wrap.innerHTML = `
+
+    <button
+    id="loadBtn"
+    class="load-btn"
+    >
+
+      Load More
+
+    </button>
+
+  `;
+
   feed.appendChild(wrap);
 
+  document
+  .getElementById('loadBtn')
+  .onclick = loadBatch;
+
   loadBatch();
+
 }
+
+// ─────────────────────────────
+// FILTERS
+// ─────────────────────────────
 
 function applyFilters(){
-  filteredChannels = shuffle(allChannels.filter(ch =>
-    ch.username && matchTag(ch, activeTag) && matchSearch(ch, searchQ)
-  ));
+
+  filteredChannels =
+  allChannels.filter(ch =>
+
+    ch.username
+    &&
+    matchSearch(
+      ch,
+      searchQ
+    )
+
+  );
+
+  const sort =
+  document.getElementById(
+    'sortSelect'
+  ).value;
+
+  if(sort === 'random'){
+
+    filteredChannels =
+    shuffle(filteredChannels);
+
+  }
+
+  if(sort === 'az'){
+
+    filteredChannels.sort(
+      (a,b)=>
+
+      (a.title || a.username)
+      .localeCompare(
+        b.title || b.username
+      )
+
+    );
+
+  }
+
+  if(sort === 'views'){
+
+    filteredChannels.sort(
+      (a,b)=>
+
+      (b.lastViews || 0)
+      -
+      (a.lastViews || 0)
+
+    );
+
+  }
+
   initFeed();
+
 }
 
-// ── Tags ──────────────────────────────────────────────────
-function buildTags(){
-  const bar = document.getElementById('tagsBar');
-  TAGS.forEach(tag => {
-    const btn = document.createElement('button');
-    btn.className='tag'+(tag.id==='all'?' active':'');
-    btn.textContent=tag.label;
-    btn.onclick=()=>{
-      document.querySelectorAll('.tag').forEach(t=>t.classList.remove('active'));
-      btn.classList.add('active');
-      activeTag=tag.id;
-      applyFilters();
-    };
-    bar.appendChild(btn);
-  });
-}
+// ─────────────────────────────
+// LOAD JSON
+// ─────────────────────────────
 
-// ── Load JSON ─────────────────────────────────────────────
 async function loadChannels(){
+
   try{
-    const r = await fetch('./channels_data.json');
-    const data = await r.json();
-    allChannels = data.filter(c=>c.username);
-  }catch(e){ allChannels=[]; }
-  buildTags();
+
+    const r =
+    await fetch(
+      './channels_data.json'
+    );
+
+    allChannels =
+    await r.json();
+
+  }catch(e){
+
+    allChannels = [];
+
+  }
+
   applyFilters();
+
 }
 
-// ── Events ────────────────────────────────────────────────
-document.getElementById('search').addEventListener('input', e=>{
-  searchQ = e.target.value.toLowerCase().trim();
+// ─────────────────────────────
+// EVENTS
+// ─────────────────────────────
+
+document
+.getElementById('search')
+.addEventListener('input',e=>{
+
+  searchQ =
+  e.target.value
+  .toLowerCase()
+  .trim();
+
   applyFilters();
+
 });
-document.getElementById('shuffleBtn').addEventListener('click', ()=>{
+
+document
+.getElementById('sortSelect')
+.addEventListener('change',()=>{
+
   applyFilters();
+
 });
+
+// ─────────────────────────────
 
 loadChannels();
+
 </script>
+
 </body>
+
 </html>
