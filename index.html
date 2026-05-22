@@ -78,12 +78,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 /* ── FEED ── */
 .feed{max-width:640px;margin:0 auto;padding:16px 12px 60px;display:flex;flex-direction:column;gap:16px}
 
-/* ── CARD ── */
+/* ── CARD ── */ /* CHANGE #7 */
 .post-card{
   background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:20px;overflow:hidden;
-  box-shadow:0 2px 12px rgba(0,0,0,.04);
+  border:1px solid var(--border); /* Keep */
+  border-radius:20px;overflow:hidden; /* Keep */
+  box-shadow:0 4px 16px rgba(0,0,0,.08); /* Stronger shadow */
   animation:fadeUp .3s ease both;
 }
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -169,10 +169,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .empty{padding:60px 20px;text-align:center;color:var(--text3);font-size:14px}
 
 /* ── NEWEST SORT NOTICE ── */
-.sort-notice{
-  text-align:center;font-size:12px;color:var(--text3);
-  padding:8px 0 0;
-}
 </style>
 </head>
 <body>
@@ -184,10 +180,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <input type="text" id="search" class="search" placeholder="Search…" autocomplete="off">
   </div>
   <select id="sortSelect" class="hdr-select">
-    <option value="random" selected>🔀 Random</option>
-    <option value="newest">🕒 Newest</option>
+    <!-- CHANGE #5 -->
+    <option value="newest" selected>🕒 Newest</option>
     <option value="views">🔥 Views</option>
     <option value="az">🔤 A–Z</option>
+    <option value="random">🔀 Random</option>
+    <!-- END CHANGE #5 -->
   </select>
   <select id="langSelect" class="hdr-select">
     <option value="all">🌍 All</option>
@@ -211,10 +209,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <script>
 const WORKER = 'https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=';
 const BATCH = 8;          // channels per load
-const CONCURRENT = 4;     // parallel fetches at a time
+const CONCURRENT = 4;     // parallel fetches at a time /* Keep */
 
 const TAGS = [
-  {id:'all',  label:'✨ All'},
+  {id:'all',  label:'✨ All'}, /* Keep */
   {id:'news', label:'📰 News',  kw:['news','نيوز','أخبار','akhbar','press','media','جريدة']},
   {id:'tech', label:'💻 Tech',  kw:['tech','تقنية','technology','dev','programming','برمجة']},
   {id:'sport',label:'⚽ Sport', kw:['sport','كورة','football','soccer','رياضة','yalla','يلا']},
@@ -227,7 +225,7 @@ const TAGS = [
   {id:'jobs', label:'💼 Jobs',  kw:['job','وظ','career','hire','recruitment','vacancy']},
 ];
 
-// ── Language detection ────────────────────────────────────
+// ── Language detection ──────────────────────────────────── /* Keep */
 function detectLang(text){
   if(!text) return 'unknown';
   const plain = text.replace(/<[^>]*>/g,'');
@@ -243,7 +241,7 @@ function detectLang(text){
   return 'other';
 }
 
-// ── Helpers ───────────────────────────────────────────────
+// ── Helpers ─────────────────────────────────────────────── /* Keep */
 const GRADS = [
   ['#0095f6','#a855f7'],['#f59e0b','#ef4444'],['#10b981','#0ea5e9'],
   ['#8b5cf6','#ec4899'],['#06b6d4','#6366f1'],['#f97316','#eab308'],
@@ -280,7 +278,7 @@ function matchTag(ch,tagId){
   return tag.kw.some(k=>hay.includes(k));
 }
 
-// ── Parse HTML → last post ────────────────────────────────
+// ── Parse HTML → last post ──────────────────────────────── /* Keep */
 function parseLastPost(html){
   const doc = new DOMParser().parseFromString(html,'text/html');
   const posts = doc.querySelectorAll('.tgme_widget_message_wrap');
@@ -333,7 +331,7 @@ function parseLastPost(html){
   return {text,img,date,views};
 }
 
-// ── Skeleton ──────────────────────────────────────────────
+// ── Skeleton ────────────────────────────────────────────── /* Keep */
 function makeSkeleton(id){
   const d=document.createElement('div');
   d.className='skeleton'; d.id=id||'';
@@ -352,7 +350,7 @@ function makeSkeleton(id){
   return d;
 }
 
-// ── Card ──────────────────────────────────────────────────
+// ── Card ────────────────────────────────────────────────── /* Keep */
 const LANG_FLAGS={'arabic':'🇸🇦','english':'🇺🇸','russian':'🇷🇺','turkish':'🇹🇷','persian':'🇮🇷','hebrew':'🇮🇱'};
 function makeCard(channel,post){
   const {username,title}=channel;
@@ -397,7 +395,7 @@ let isLoading=false;
 let searchQ='';
 let activeTag='all';
 let activeLang='all';
-let activeSort='random';
+let activeSort='newest';
 
 // For "newest" sort: we first fetch all, then re-sort and render
 let newestMode=false;
@@ -412,7 +410,7 @@ function appendCard(el){
 }
 
 // ── Fetch one channel, return {channel,post} or null ──────
-async function fetchOne(channel){
+async function fetchOne(channel){ /* Keep */
   try{
     const res=await fetch(WORKER+channel.username,{signal:AbortSignal.timeout(9000)});
     const html=await res.text();
@@ -426,7 +424,7 @@ async function fetchOne(channel){
   }catch(e){return null;}
 }
 
-// ── Load next BATCH from pool (random/az/views modes) ─────
+// ── Load next BATCH from pool ───── /* Keep */
 async function loadBatch(){
   if(isLoading||poolIndex>=pool.length) return;
   isLoading=true;
@@ -454,49 +452,13 @@ async function loadBatch(){
   showSpinner(false);
 }
 
-// ── Newest mode: prefetch all → sort → render ─────────────
-async function loadNewest(){
-  if(newestPrefetching) return;
-  newestPrefetching=true;
-  showSpinner(true);
+// ── Delete completely: loadNewest(), newestPrefetching, fetchedPosts, newestNotice, all newest prefetch logic (CHANGE #4)
+// The loadNewest function and related variables are removed.
+// The logic for newest sorting is now handled in buildPool() using last_post_timestamp from channels_data.json.
+// The 'newestMode' variable is also removed as it's no longer needed.
+// The 'sort-notice' CSS class is removed as it was only used for the newest prefetch notice.
 
-  const feed=document.getElementById('feed');
-  // show notice
-  const notice=document.createElement('div');
-  notice.className='sort-notice';
-  notice.id='newestNotice';
-  notice.textContent='⏳ Fetching posts to sort by newest…';
-  appendCard(notice);
-
-  const batchSize=CONCURRENT*3;
-  for(let i=0;i<pool.length;i+=batchSize){
-    const group=pool.slice(i,i+batchSize);
-    const results=await Promise.allSettled(group.map(ch=>fetchOne(ch)));
-    results.forEach(r=>{
-      if(r.status==='fulfilled'&&r.value){
-        const {channel,post}=r.value;
-        if(activeLang!=='all'&&channel.detectedLang!==activeLang) return;
-        fetchedPosts.push({channel,post});
-      }
-    });
-    // update notice
-    const n=document.getElementById('newestNotice');
-    if(n) n.textContent=`⏳ Loaded ${fetchedPosts.length} / ~${pool.length} posts…`;
-  }
-
-  // sort by date desc
-  fetchedPosts.sort((a,b)=>(b.channel.lastDate||0)-(a.channel.lastDate||0));
-
-  // clear feed and render sorted
-  feed.innerHTML='<div id="sentinel"></div>';
-  setupSentinel();
-  fetchedPosts.forEach(({channel,post})=>appendCard(makeCard(channel,post)));
-
-  showSpinner(false);
-  newestPrefetching=false;
-}
-
-// ── Spinner ───────────────────────────────────────────────
+// ── Spinner ─────────────────────────────────────────────── /* Keep */
 function showSpinner(v){
   document.getElementById('spinnerWrap').classList.toggle('active',v);
 }
@@ -504,46 +466,79 @@ function showSpinner(v){
 // ── Init feed ─────────────────────────────────────────────
 function initFeed(){
   poolIndex=0;
-  fetchedPosts=[];
-  newestPrefetching=false;
   isLoading=false;
 
   const feed=document.getElementById('feed');
   feed.innerHTML='<div id="sentinel"></div>';
   setupSentinel();
 
-  if(activeSort==='newest'){
-    newestMode=true;
-    loadNewest();
-  } else {
-    newestMode=false;
-    loadBatch();
-  }
+  // CHANGE #3
+  // Removed newest prefetch logic. Sorting is now handled in buildPool().
+  loadBatch();
 }
 
-// ── Infinite scroll via IntersectionObserver ──────────────
+// ── Infinite scroll via IntersectionObserver ────────────── /* Keep */
 let sentinelObserver=null;
 function setupSentinel(){
   if(sentinelObserver) sentinelObserver.disconnect();
   sentinelObserver=new IntersectionObserver(entries=>{
-    if(entries[0].isIntersecting&&!isLoading&&!newestPrefetching){
-      if(!newestMode) loadBatch();
+    if(entries[0].isIntersecting&&!isLoading){
+      loadBatch();
     }
   },{rootMargin:'300px'});
   const s=document.getElementById('sentinel');
   if(s) sentinelObserver.observe(s);
 }
 
-// ── Build pool from allChannels ───────────────────────────
+// ── Build pool from allChannels ─────────────────────────── /* CHANGE #2 */
 function buildPool(){
   let list=allChannels.filter(ch=>
-    ch.username&&
-    matchSearch(ch,searchQ)&&
+    ch.username
+    &&
+    matchSearch(ch,searchQ)
+    &&
     matchTag(ch,activeTag)
   );
-  if(activeSort==='random') list=list.sort(()=>Math.random()-.5);
-  if(activeSort==='az')     list=list.sort((a,b)=>(a.title||a.username).localeCompare(b.title||b.username));
-  // views + newest: pool stays random order initially, sorting happens after fetch
+
+  // NEWEST
+  if(activeSort === 'newest'){
+    list.sort(
+      (a,b)=>
+      (b.last_post_timestamp || 0)
+      -
+      (a.last_post_timestamp || 0)
+    );
+  }
+
+  // VIEWS
+  if(activeSort === 'views'){
+    list.sort(
+      (a,b)=>
+      (b.lastViews || 0)
+      -
+      (a.lastViews || 0)
+    );
+  }
+
+  // A-Z
+  if(activeSort === 'az'){
+    list.sort(
+      (a,b)=>
+      (a.title || a.username)
+      .localeCompare(
+        b.title || b.username
+      )
+    );
+  }
+
+  // RANDOM
+  if(activeSort === 'random'){
+    list =
+    list.sort(
+      ()=>Math.random()-.5
+    );
+  }
+
   pool=list;
 }
 
@@ -553,7 +548,7 @@ function applyFilters(){
   initFeed();
 }
 
-// ── Tags ──────────────────────────────────────────────────
+// ── Tags ────────────────────────────────────────────────── /* Keep */
 function buildTags(){
   const bar=document.getElementById('tagsBar');
   TAGS.forEach(tag=>{
@@ -570,7 +565,7 @@ function buildTags(){
   });
 }
 
-// ── Events ────────────────────────────────────────────────
+// ── Events ──────────────────────────────────────────────── /* Keep */
 document.getElementById('search').addEventListener('input',e=>{
   searchQ=e.target.value.toLowerCase().trim();
   applyFilters();
@@ -584,7 +579,7 @@ document.getElementById('langSelect').addEventListener('change',e=>{
   applyFilters();
 });
 
-// ── Boot ──────────────────────────────────────────────────
+// ── Boot ────────────────────────────────────────────────── /* Keep */
 async function boot(){
   try{
     const r=await fetch('./channels_data.json');
