@@ -68,6 +68,8 @@ body{
 
   padding:12px;
 
+  flex-wrap:wrap;
+
 }
 
 .logo{
@@ -318,27 +320,9 @@ body{
 
 }
 
-/* MOBILE */
+.load-btn:disabled{
 
-@media(max-width:768px){
-
-  .header{
-
-    flex-wrap:wrap;
-
-  }
-
-  .search{
-
-    width:100%;
-
-  }
-
-  .sort{
-
-    width:100%;
-
-  }
+  opacity:.5;
 
 }
 
@@ -558,7 +542,7 @@ function parseLastPost(html){
 }
 
 // ─────────────────────────────
-// RENDER CARD
+// CARD
 // ─────────────────────────────
 
 function makeCard(channel,post){
@@ -714,9 +698,17 @@ async function fetchAndRender(channel){
     const card =
     makeCard(channel,post);
 
+    const loadWrap =
+    document.getElementById(
+      'loadWrap'
+    );
+
     document
     .getElementById('feed')
-    .appendChild(card);
+    .insertBefore(
+      card,
+      loadWrap
+    );
 
   }catch(e){
 
@@ -726,6 +718,75 @@ async function fetchAndRender(channel){
 
 }
 
+// ─────────────────────────────
+// LOAD BATCH
+// ─────────────────────────────
+
+async function loadBatch(){
+
+  if(isLoading)
+    return;
+
+  isLoading = true;
+
+  const btn =
+  document.getElementById(
+    'loadBtn'
+  );
+
+  if(btn){
+
+    btn.disabled = true;
+
+    btn.innerText =
+    'Loading...';
+
+  }
+
+  const pending = [];
+
+  for(
+    let i=0;
+    i<filteredChannels.length;
+    i++
+  ){
+
+    if(
+      pending.length >= BATCH
+    ) break;
+
+    if(
+      usedIndexes.has(i)
+    ) continue;
+
+    usedIndexes.add(i);
+
+    pending.push(
+
+      fetchAndRender(
+        filteredChannels[i]
+      )
+
+    );
+
+  }
+
+  await Promise.allSettled(
+    pending
+  );
+
+  isLoading = false;
+
+  if(btn){
+
+    btn.disabled = false;
+
+    btn.innerText =
+    'Load More';
+
+  }
+
+}
 
 // ─────────────────────────────
 // INIT FEED
@@ -775,8 +836,6 @@ function initFeed(){
   loadBatch();
 
 }
-
-  
 
 // ─────────────────────────────
 // FILTERS
