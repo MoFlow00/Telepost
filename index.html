@@ -315,24 +315,29 @@ function render(){
         </a>
       </div>
       <div class="frame-wrap" data-src="https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=${username}">
-        <div class="frame-overlay" title="Click to load posts">
+        <div class="frame-overlay">
           <svg viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4 20-7z"/></svg>
-          <span>Click to load posts</span>
+          <span>Loading…</span>
         </div>
       </div>
     `;
-    const wrap = card.querySelector('.frame-wrap');
-    const overlay = card.querySelector('.frame-overlay');
-    overlay.addEventListener('click', () => {
-      const src = wrap.dataset.src;
-      const iframe = document.createElement('iframe');
-      iframe.src = src;
-      iframe.loading = 'lazy';
-      wrap.appendChild(iframe);
-      overlay.classList.add('hidden');
-    });
     grid.appendChild(card);
   });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(!entry.isIntersecting) return;
+      const wrap = entry.target;
+      if(wrap.dataset.loaded) return;
+      wrap.dataset.loaded = '1';
+      const iframe = document.createElement('iframe');
+      iframe.src = wrap.dataset.src;
+      wrap.appendChild(iframe);
+      wrap.querySelector('.frame-overlay').classList.add('hidden');
+      observer.unobserve(wrap);
+    });
+  }, { rootMargin:'200px' });
+  document.querySelectorAll('.frame-wrap').forEach(w => observer.observe(w));
 
   renderPagination();
   window.scrollTo({top:0,behavior:'smooth'});
