@@ -726,71 +726,74 @@ async function fetchAndRender(channel){
 
 }
 
+
 // ─────────────────────────────
-// LOAD BATCH
+// FETCH
 // ─────────────────────────────
 
-async function loadBatch(){
+async function fetchAndRender(channel){
 
-  if(isLoading)
-    return;
+  try{
 
-  isLoading = true;
+    const res =
+    await fetch(
 
-  const btn =
-  document.getElementById(
-    'loadBtn'
-  );
+      WORKER +
+      channel.username,
 
-  if(btn){
-
-    btn.disabled = true;
-
-    btn.innerText =
-    'Loading...';
-
-  }
-
-  const pending = [];
-
-  for(
-    let i=0;
-    i<filteredChannels.length;
-    i++
-  ){
-
-    if(
-      pending.length >= BATCH
-    ) break;
-
-    if(
-      usedIndexes.has(i)
-    ) continue;
-
-    usedIndexes.add(i);
-
-    pending.push(
-
-      fetchAndRender(
-        filteredChannels[i]
-      )
+      {
+        signal:
+        AbortSignal.timeout(8000)
+      }
 
     );
 
-  }
+    const html =
+    await res.text();
 
-  await Promise.allSettled(
-    pending
-  );
+    const post =
+    parseLastPost(html);
 
-  isLoading = false;
+    if(
+      !post
+      ||
+      (
+        !post.text
+        &&
+        !post.img
+      )
+    ){
 
-  if(btn){
+      return;
 
-    btn.disabled = false;
+    }
 
-    btn.innerText =
-    'Load More';
+    channel.lastViews =
+    parseInt(
+
+      (post.views || '0')
+      .replace(/[^\d]/g,'')
+
+    ) || 0;
+
+    const card =
+    makeCard(channel,post);
+
+    const loadWrap =
+    document.getElementById(
+      'loadWrap'
+    );
+
+    document
+    .getElementById('feed')
+    .insertBefore(
+      card,
+      loadWrap
+    );
+
+  }catch(e){
+
+    console.log(e);
 
   }
 
@@ -819,6 +822,9 @@ function initFeed(){
   wrap.className =
   'load-wrap';
 
+  wrap.id =
+  'loadWrap';
+
   wrap.innerHTML = `
 
     <button
@@ -841,6 +847,8 @@ function initFeed(){
   loadBatch();
 
 }
+
+  
 
 // ─────────────────────────────
 // FILTERS
