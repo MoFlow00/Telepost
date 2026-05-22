@@ -1,366 +1,420 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="ar" dir="ltr">
 <head>
-
 <meta charset="UTF-8">
-
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
->
-
-<title>Telegram Live Explorer</title>
-
-<link
-href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-rel="stylesheet"
->
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TELEPOSTS</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#fafafa;
+  --surface:#fff;
+  --border:#efefef;
+  --text:#111;
+  --text2:#666;
+  --text3:#999;
+  --accent:#0095f6;
+  --accent-hover:#1877f2;
+  --tag-bg:#f0f2f5;
+  --tag-active:#0095f6;
+  --tag-active-text:#fff;
+  --header-h:52px;
+  --card-radius:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.08);
 }
-
-body{
-    font-family:'Inter',sans-serif;
-    background:#f3f6fb;
-    color:#111827;
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#000;
+    --surface:#111;
+    --border:#222;
+    --text:#fafafa;
+    --text2:#aaa;
+    --text3:#666;
+    --tag-bg:#1a1a1a;
+  }
 }
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
+/* HEADER */
 .header{
-
-    position:sticky;
-    top:0;
-    z-index:999;
-
-    background:white;
-
-    padding:18px 24px;
-
-    border-bottom:
-    1px solid #e5e7eb;
-
-    display:flex;
-    gap:14px;
-    align-items:center;
+  position:sticky;top:0;z-index:999;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  height:var(--header-h);
+  display:flex;align-items:center;
+  padding:0 16px;gap:10px;
 }
-
 .logo{
-
-    font-size:22px;
-    font-weight:700;
-
+  font-size:17px;font-weight:700;letter-spacing:-.3px;
+  white-space:nowrap;color:var(--text);
+  flex-shrink:0;
 }
-
+.logo span{color:var(--accent)}
+.search-wrap{
+  flex:1;position:relative;min-width:0;
+}
+.search-wrap svg{
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  width:16px;height:16px;stroke:var(--text3);fill:none;stroke-width:2;stroke-linecap:round;
+  pointer-events:none;
+}
 .search{
-
-    flex:1;
-
-    padding:15px 18px;
-
-    border:none;
-
-    border-radius:16px;
-
-    background:#eef2f7;
-
-    outline:none;
-
-    font-size:15px;
+  width:100%;padding:7px 10px 7px 32px;
+  border:1px solid var(--border);border-radius:20px;
+  background:var(--tag-bg);color:var(--text);
+  font-size:14px;outline:none;
+  transition:border-color .2s;
+}
+.search:focus{border-color:var(--accent)}
+.header-count{
+  font-size:12px;color:var(--text3);white-space:nowrap;flex-shrink:0;
 }
 
+/* TAGS BAR */
+.tags-bar{
+  position:sticky;top:var(--header-h);z-index:998;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:8px 12px;
+  display:flex;gap:6px;overflow-x:auto;
+  scrollbar-width:none;
+}
+.tags-bar::-webkit-scrollbar{display:none}
+.tag{
+  flex-shrink:0;
+  padding:4px 12px;border-radius:20px;
+  font-size:13px;font-weight:500;cursor:pointer;
+  background:var(--tag-bg);color:var(--text2);
+  border:1px solid transparent;
+  transition:all .15s;white-space:nowrap;
+}
+.tag:hover{border-color:var(--accent);color:var(--accent)}
+.tag.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* GRID */
 .grid{
-
-    padding:24px;
-
-    display:grid;
-
-    grid-template-columns:
-    repeat(auto-fill,minmax(420px,1fr));
-
-    gap:24px;
+  max-width:1200px;margin:0 auto;
+  padding:16px 12px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:16px;
+}
+@media(max-width:640px){
+  .grid{grid-template-columns:1fr;padding:12px 8px;gap:12px}
 }
 
+/* CARD */
 .card{
-
-    background:white;
-
-    border-radius:28px;
-
-    overflow:hidden;
-
-    box-shadow:
-    0 8px 30px rgba(0,0,0,.06);
-
-    transition:.25s;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--card-radius);
+  overflow:hidden;
+  transition:transform .2s,box-shadow .2s;
 }
-
 .card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 4px 16px rgba(0,0,0,.1);
+}
+.card-head{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 14px 10px;
+  border-bottom:1px solid var(--border);
+}
+.avatar{
+  width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,#0095f6,#a855f7);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:700;color:#fff;
+  flex-shrink:0;letter-spacing:-.5px;
+}
+.card-info{flex:1;min-width:0}
+.card-title{
+  font-size:14px;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:var(--text);
+}
+.card-user{
+  font-size:12px;color:var(--text3);
+  text-decoration:none;display:block;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.card-user:hover{color:var(--accent)}
+.open-btn{
+  flex-shrink:0;
+  width:32px;height:32px;border-radius:50%;
+  background:var(--tag-bg);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text2);transition:all .2s;
+  text-decoration:none;
+}
+.open-btn:hover{background:var(--accent);color:#fff}
+.open-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-    transform:
-    translateY(-4px);
+/* IFRAME WRAPPER */
+.frame-wrap{
+  position:relative;overflow:hidden;
+  height:420px;
+  background:var(--bg);
+}
+.frame-wrap iframe{
+  width:100%;height:100%;border:none;display:block;
+}
+.frame-overlay{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:8px;font-size:13px;color:var(--text3);
+  cursor:pointer;
+}
+.frame-overlay svg{
+  width:32px;height:32px;stroke:var(--text3);fill:none;stroke-width:1.5;
+}
+.frame-overlay.hidden{display:none}
 
+/* EMPTY */
+.empty{
+  grid-column:1/-1;
+  padding:60px 20px;text-align:center;color:var(--text3);font-size:15px;
 }
 
-.card-top{
-
-    padding:18px;
+/* PAGINATION */
+.pagination{
+  display:flex;align-items:center;justify-content:center;
+  gap:8px;padding:24px 16px 40px;
+  flex-wrap:wrap;
 }
-
-.title{
-
-    font-size:18px;
-
-    font-weight:700;
-
-    margin-bottom:8px;
+.pg-btn{
+  padding:8px 16px;border-radius:8px;
+  border:1px solid var(--border);background:var(--surface);
+  color:var(--text);font-size:14px;cursor:pointer;
+  transition:all .15s;font-family:'Inter',sans-serif;
 }
-
-.username{
-
-    color:#2563eb;
-
-    text-decoration:none;
-
-    font-size:14px;
+.pg-btn:hover:not(:disabled){background:var(--accent);color:#fff;border-color:var(--accent)}
+.pg-btn:disabled{opacity:.35;cursor:default}
+.pg-info{
+  font-size:14px;color:var(--text2);white-space:nowrap;padding:0 4px;
 }
-
-.frame{
-
-    width:100%;
-
-    height:700px;
-
-    border:none;
-
-    background:white;
+.pg-input{
+  width:64px;padding:7px 10px;
+  border:1px solid var(--border);border-radius:8px;
+  background:var(--surface);color:var(--text);
+  font-size:14px;text-align:center;outline:none;
+  font-family:'Inter',sans-serif;
 }
-
-.loading{
-
-    padding:40px;
-
-    text-align:center;
-
-    color:#6b7280;
+.pg-input:focus{border-color:var(--accent)}
+.pg-go{
+  padding:7px 14px;border-radius:8px;
+  background:var(--accent);color:#fff;border:none;cursor:pointer;
+  font-size:14px;font-family:'Inter',sans-serif;
 }
-
-@media(max-width:768px){
-
-    .grid{
-
-        grid-template-columns:1fr;
-    }
-
-    .frame{
-
-        height:600px;
-    }
-
-}
-
 </style>
-
 </head>
-
 <body>
 
-<div class="header">
+<header class="header">
+  <div class="logo">TELE<span>POSTS</span></div>
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="search" class="search" placeholder="Search channels…" autocomplete="off" spellcheck="false">
+  </div>
+  <div class="header-count" id="count"></div>
+</header>
 
-<div class="logo">
-Telegram Explorer
-</div>
+<div class="tags-bar" id="tagsBar"></div>
 
-<input
-type="text"
-id="search"
-class="search"
-placeholder="Search channels..."
->
-
-</div>
-
-<div
-id="grid"
-class="grid"
->
-
-<div class="loading">
-Loading channels...
-</div>
-
-</div>
+<div class="grid" id="grid"></div>
+<div class="pagination" id="pagination"></div>
 
 <script>
+const PER_PAGE = 18;
+let allChannels = [];
+let filtered = [];
+let page = 1;
+let activeTag = 'all';
 
-let originalChannels = [] 
-let allChannels = [] 
-let currentPage = 1
+const TAGS = [
+  {id:'all',   label:'All'},
+  {id:'news',  label:'News',    kw:['news','نيوز','أخبار','akhbar','press','media','جريدة','صحيفة']},
+  {id:'tech',  label:'Tech',    kw:['tech','تقنية','technology','dev','programming','code','برمجة','software']},
+  {id:'sport', label:'Sports',  kw:['sport','كورة','football','soccer','رياضة','match','يلا','yalla']},
+  {id:'music', label:'Music',   kw:['music','موسيقى','songs','اغاني','rap','beats','audio']},
+  {id:'film',  label:'Film',    kw:['film','movie','series','مسلسل','افلام','drama','سينما','cinema']},
+  {id:'jobs',  label:'Jobs',    kw:['job','وظ','career','hire','recruitment','شغل','vacancy']},
+  {id:'crypto',label:'Crypto',  kw:['crypto','bitcoin','btc','eth','coin','عملة','binance','trading']},
+  {id:'edu',   label:'Education',kw:['edu','تعليم','learn','courses','كورس','tutorial','school','university']},
+  {id:'fun',   label:'Fun',     kw:['fun','meme','funny','ميم','نكتة','humor','jokes','comedy']},
+  {id:'art',   label:'Art',     kw:['art','design','فن','تصميم','photo','photography','creative']},
+  {id:'biz',   label:'Business',kw:['business','تجارة','invest','استثمار','trading','market','مال']},
+];
 
-const perPage = 20
+function avatarText(title){
+  if(!title) return '?';
+  const words = title.trim().split(/\s+/);
+  if(words.length >= 2) return (words[0][0]+words[1][0]).toUpperCase();
+  return title.slice(0,2).toUpperCase();
+}
 
-async function loadChannels(){
+function avatarColor(username){
+  const colors = [
+    ['#0095f6','#a855f7'],['#f59e0b','#ef4444'],['#10b981','#0ea5e9'],
+    ['#8b5cf6','#ec4899'],['#06b6d4','#6366f1'],['#f97316','#eab308']
+  ];
+  let hash = 0;
+  for(let c of (username||'')) hash = (hash*31 + c.charCodeAt(0)) & 0xffffff;
+  const pair = colors[hash % colors.length];
+  return `linear-gradient(135deg,${pair[0]},${pair[1]})`;
+}
 
-    const response =
-    await fetch('./channels_data.json')
+function matchTag(channel, tagId){
+  if(tagId === 'all') return true;
+  const tag = TAGS.find(t=>t.id===tagId);
+  if(!tag) return true;
+  const haystack = ((channel.title||'')+(channel.username||'')).toLowerCase();
+  return tag.kw.some(k => haystack.includes(k));
+}
 
-originalChannels = await 
-response.json() 
-allChannels = [...originalChannels]
-
-    render()
+function applyFilter(){
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  filtered = allChannels.filter(ch => {
+    if(!ch.username) return false;
+    const matchQ = !q || (ch.title||'').toLowerCase().includes(q) || (ch.username||'').toLowerCase().includes(q);
+    const matchT = matchTag(ch, activeTag);
+    return matchQ && matchT;
+  });
+  page = 1;
+  document.getElementById('count').textContent = filtered.length.toLocaleString() + ' channels';
+  render();
 }
 
 function render(){
+  const grid = document.getElementById('grid');
+  const start = (page-1)*PER_PAGE;
+  const slice = filtered.slice(start, start+PER_PAGE);
 
-    const grid =
-    document.getElementById('grid')
+  if(!slice.length){
+    grid.innerHTML = '<div class="empty">No channels found</div>';
+    renderPagination();
+    return;
+  }
 
-    grid.innerHTML = ''
+  grid.innerHTML = '';
+  slice.forEach(ch => {
+    const username = ch.username;
+    const title = ch.title || username;
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-head">
+        <div class="avatar" style="background:${avatarColor(username)}">${avatarText(title)}</div>
+        <div class="card-info">
+          <div class="card-title" title="${title}">${title}</div>
+          <a class="card-user" href="https://t.me/${username}" target="_blank">@${username}</a>
+        </div>
+        <a class="open-btn" href="https://t.me/${username}" target="_blank" title="Open in Telegram">
+          <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+      </div>
+      <div class="frame-wrap" data-src="https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=${username}">
+        <div class="frame-overlay" title="Click to load posts">
+          <svg viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+          <span>Click to load posts</span>
+        </div>
+      </div>
+    `;
+    const wrap = card.querySelector('.frame-wrap');
+    const overlay = card.querySelector('.frame-overlay');
+    overlay.addEventListener('click', () => {
+      const src = wrap.dataset.src;
+      const iframe = document.createElement('iframe');
+      iframe.src = src;
+      iframe.loading = 'lazy';
+      wrap.appendChild(iframe);
+      overlay.classList.add('hidden');
+    });
+    grid.appendChild(card);
+  });
 
-    const start =
-    (currentPage - 1) * perPage
-
-    const end =
-    start + perPage
-
-    const channels =
-    allChannels.slice(start,end)
-
-    channels.forEach(channel => {
-
-        if(!channel.username) return
-
-        const username =
-        channel.username
-
-        const title =
-        channel.title || username
-
-        const card =
-        document.createElement('div')
-
-        card.className = 'card'
-
-        card.innerHTML = `
-
-            <div class="card-top">
-
-                <div class="title">
-                    ${title}
-                </div>
-
-                <a
-                class="username"
-                href="https://t.me/${username}"
-                target="_blank"
-                >
-                @${username}
-                </a>
-
-            </div>
-
-<iframe class="frame" loading="lazy" src="https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=${username}" > </iframe>
-
-        `
-
-        grid.appendChild(card)
-
-    })
-
-    renderPagination()
+  renderPagination();
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function renderPagination(){
+  const total = Math.ceil(filtered.length / PER_PAGE);
+  const pag = document.getElementById('pagination');
+  pag.innerHTML = '';
+  if(total <= 1) return;
 
-    let old =
-    document.getElementById(
-    'pagination'
-    )
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'pg-btn';
+  prevBtn.textContent = '← Prev';
+  prevBtn.disabled = page === 1;
+  prevBtn.onclick = () => { page--; render(); };
+  pag.appendChild(prevBtn);
 
-    if(old){
-        old.remove()
-    }
+  const info = document.createElement('span');
+  info.className = 'pg-info';
+  info.textContent = `Page ${page} / ${total}`;
+  pag.appendChild(info);
 
-    const pages =
-    Math.ceil(
-      allChannels.length / perPage
-    )
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.className = 'pg-input';
+  input.min = 1; input.max = total;
+  input.value = page;
+  input.placeholder = '#';
+  pag.appendChild(input);
 
-    const pagination =
-    document.createElement('div')
+  const goBtn = document.createElement('button');
+  goBtn.className = 'pg-go';
+  goBtn.textContent = 'Go';
+  goBtn.onclick = () => {
+    let v = parseInt(input.value);
+    if(v >= 1 && v <= total){ page = v; render(); }
+  };
+  input.addEventListener('keydown', e => { if(e.key==='Enter') goBtn.click(); });
+  pag.appendChild(goBtn);
 
-    pagination.id = 'pagination'
-
-    pagination.style.textAlign =
-    'center'
-
-    pagination.style.padding =
-    '40px'
-
-    for(let i=1;i<=pages;i++){
-
-        const btn =
-        document.createElement('button')
-
-        btn.innerText = i
-
-        btn.style.margin = '5px'
-
-        btn.style.padding =
-        '12px 18px'
-
-        btn.style.border = 'none'
-
-        btn.style.borderRadius = '12px'
-
-        btn.style.cursor = 'pointer'
-
-        btn.onclick = ()=>{
-
-            currentPage = i
-
-            render()
-
-            window.scrollTo({
-                top:0,
-                behavior:'smooth'
-            })
-        }
-
-        pagination.appendChild(btn)
-    }
-
-    document.body.appendChild(
-    pagination
-    )
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'pg-btn';
+  nextBtn.textContent = 'Next →';
+  nextBtn.disabled = page === total;
+  nextBtn.onclick = () => { page++; render(); };
+  pag.appendChild(nextBtn);
 }
 
-document
-.getElementById('search')
-.addEventListener('input',e=>{
+function buildTags(){
+  const bar = document.getElementById('tagsBar');
+  TAGS.forEach(tag => {
+    const btn = document.createElement('button');
+    btn.className = 'tag' + (tag.id === 'all' ? ' active' : '');
+    btn.textContent = tag.label;
+    btn.dataset.id = tag.id;
+    btn.onclick = () => {
+      document.querySelectorAll('.tag').forEach(t=>t.classList.remove('active'));
+      btn.classList.add('active');
+      activeTag = tag.id;
+      applyFilter();
+    };
+    bar.appendChild(btn);
+  });
+}
 
-    const q =
-    e.target.value.toLowerCase()
+document.getElementById('search').addEventListener('input', applyFilter);
 
-allChannels = originalChannels.filter(channel => { return ( channel.title ?.toLowerCase() .includes(q) || channel.username ?.toLowerCase() .includes(q) ) })
+async function loadChannels(){
+  try {
+    const r = await fetch('./channels_data.json');
+    allChannels = await r.json();
+  } catch(e){
+    allChannels = [];
+  }
+  filtered = allChannels.filter(c => c.username);
+  document.getElementById('count').textContent = filtered.length.toLocaleString() + ' channels';
+  buildTags();
+  render();
+}
 
-    currentPage = 1
-
-    render()
-
-})
-
-loadChannels()
-
-
-
+loadChannels();
 </script>
-
 </body>
-
 </html>
