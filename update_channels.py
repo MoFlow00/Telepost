@@ -1,31 +1,87 @@
 import json
+import time
 import requests
+
 from bs4 import BeautifulSoup
 from datetime import datetime
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0"
+    "User-Agent":
+    "Mozilla/5.0"
 }
 
-with open("channels_data.json","r",encoding="utf-8") as f:
-    channels = json.load(f)
+INPUT_FILE = "channels_data.json"
 
-for channel in channels:
+# ─────────────────────────────
+# LOAD JSON
+# ─────────────────────────────
 
-    username = channel.get("username")
+try:
+
+    with open(
+        INPUT_FILE,
+        "r",
+        encoding="utf-8"
+    ) as f:
+
+        channels = json.load(f)
+
+except Exception as e:
+
+    print("FAILED TO LOAD JSON:", e)
+
+    channels = []
+
+# ─────────────────────────────
+# UPDATE CHANNELS
+# ─────────────────────────────
+
+total = len(channels)
+
+for index, channel in enumerate(channels):
+
+    username = channel.get(
+        "username"
+    )
 
     if not username:
+
+        print(
+            f"[{index+1}/{total}]",
+            "SKIP EMPTY USERNAME"
+        )
+
         continue
+
+    print(
+        f"[{index+1}/{total}]",
+        "CHECKING:",
+        username
+    )
 
     try:
 
-        url = f"https://t.me/s/{username}"
+        url = (
+            f"https://t.me/s/{username}"
+        )
 
         r = requests.get(
             url,
             headers=HEADERS,
-            timeout=10
+            timeout=15
         )
+
+        # HTTP ERROR
+
+        if r.status_code != 200:
+
+            print(
+                "HTTP ERROR:",
+                username,
+                r.status_code
+            )
+
+            continue
 
         soup = BeautifulSoup(
             r.text,
@@ -36,61 +92,178 @@ for channel in channels:
             ".tgme_widget_message"
         )
 
+        # NO POSTS
+
         if not posts:
+
+            print(
+                "NO POSTS:",
+                username
+            )
+
             continue
 
         last = posts[-1]
 
-        post_id = (
-            last.get("data-post")
-            .split("/")[-1]
+        data_post = last.get(
+            "data-post"
         )
 
-        time_el = last.select_one("time")
+        # NO POST ID
 
-        post_date = (
-            time_el.get("datetime")
-            if time_el
-            else None
+        if not data_post:
+
+            print(
+                "NO POST ID:",
+                username
+            )
+
+            continue
+
+        # BAD POST ID
+
+        try:
+
+            post_id = int(
+                data_post
+                .split("/")[-1]
+            )
+
+        except Exception:
+
+            print(
+                "BAD POST ID:",
+                username
+            )
+
+            continue
+
+        # DATE
+
+        time_el = last.select_one(
+            "time"
         )
 
-        channel["last_post_id"] = int(post_id)
+        post_date = None
 
-        channel["last_post_date"] = post_date
+        if time_el:
+
+            post_date = (
+                time_el.get(
+                    "datetime"
+                )
+            )
+
+        # TIMESTAMP
+
+        timestamp = 0
 
         if post_date:
 
-            ts = int(
-                datetime.fromisoformat(
-                    post_date.replace(
-                        "Z","+00:00"
+            try:
+
+                timestamp = int(
+
+                    datetime
+                    .fromisoformat(
+
+                        post_date.replace(
+                            "Z",
+                            "+00:00"
+                        )
+
                     )
-                ).timestamp()
-            )
+                    .timestamp()
 
-            channel[
-                "last_post_timestamp"
-            ] = ts
+                )
 
-        print("OK:",username)
+            except Exception as e:
+
+                print(
+                    "BAD DATE:",
+                    username,
+                    e
+                )
+
+        # SAVE DATA
+
+        channel[
+            "last_post_id"
+        ] = post_id
+
+        channel[
+            "last_post_date"
+        ] = post_date
+
+        channel[
+            "last_post_timestamp"
+        ] = timestamp
+
+        print(
+            "UPDATED:",
+            username,
+            post_id
+        )
+
+        # SMALL DELAY
+        # avoid telegram rate limit
+
+        time.sleep(0.7)
+
+    except requests.exceptions.Timeout:
+
+        print(
+            "TIMEOUT:",
+            username
+        )
+
+        continue
+
+    except requests.exceptions.ConnectionError:
+
+        print(
+            "CONNECTION ERROR:",
+            username
+        )
+
+        continue
 
     except Exception as e:
 
         print(
-            "ERROR:",
+            "UNKNOWN ERROR:",
             username,
             e
         )
 
-with open(
-    "channels_data.json",
-    "w",
-    encoding="utf-8"
-) as f:
+        continue
 
-    json.dump(
-        channels,
-        f,
-        ensure_ascii=False,
-        indent=2
+# ─────────────────────────────
+# SAVE JSON
+# ─────────────────────────────
+
+try:
+
+    with open(
+        INPUT_FILE,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        json.dump(
+            channels,
+            f,
+            ensure_ascii=False,
+            indent=2
+        )
+
+    print(
+        "\nDONE. JSON UPDATED."
+    )
+
+except Exception as e:
+
+    print(
+        "FAILED TO SAVE JSON:",
+        e
     )
