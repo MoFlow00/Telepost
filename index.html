@@ -197,19 +197,20 @@ Loading channels...
 
 <script>
 
-let allChannels = []
-
+let originalChannels = [] 
+let allChannels = [] 
 let currentPage = 1
 
-const perPage = 30
+const perPage = 20
 
 async function loadChannels(){
 
     const response =
     await fetch('./channels_data.json')
 
-    allChannels =
-    await response.json()
+originalChannels = await 
+response.json() 
+allChannels = [...originalChannels]
 
     render()
 }
@@ -346,24 +347,7 @@ document
     const q =
     e.target.value.toLowerCase()
 
-    allChannels =
-    allChannels.filter(channel => {
-
-        return (
-
-            channel.title
-            ?.toLowerCase()
-            .includes(q)
-
-            ||
-
-            channel.username
-            ?.toLowerCase()
-            .includes(q)
-
-        )
-
-    })
+allChannels = originalChannels.filter(channel => { return ( channel.title ?.toLowerCase() .includes(q) || channel.username ?.toLowerCase() .includes(q) ) })
 
     currentPage = 1
 
