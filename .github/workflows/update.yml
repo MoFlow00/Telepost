@@ -2,13 +2,10 @@ name: Update Channels
 
 on:
 
-  schedule:
-    - cron: '0 */6 * * *'
-
   workflow_dispatch:
 
-permissions:
-  contents: write
+  schedule:
+    - cron: "0 */6 * * *"
 
 jobs:
 
@@ -18,13 +15,13 @@ jobs:
 
     steps:
 
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -32,16 +29,22 @@ jobs:
 
       - name: Run updater
         run: |
-          python update_channels.py
+          python updater.py
 
       - name: Commit changes
         run: |
 
           git config user.name "github-actions"
-          git config user.email "actions@github.com"
+          git config user.email "github-actions@github.com"
 
-          git add channels_data.json
+          git add .
 
-          git diff --cached --quiet || git commit -m "Update channels data"
+          git commit -m "Update channels data" || echo "No changes"
 
+      - name: Pull latest changes
+        run: |
+          git pull origin main --rebase
+
+      - name: Push changes
+        run: |
           git push
