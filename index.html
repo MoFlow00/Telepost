@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+>
+
+<title>Telegram Live Explorer</title>
+
+<link
+href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+rel="stylesheet"
+>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Inter',sans-serif;
+    background:#f3f6fb;
+    color:#111827;
+}
+
+.header{
+
+    position:sticky;
+    top:0;
+    z-index:999;
+
+    background:white;
+
+    padding:18px 24px;
+
+    border-bottom:
+    1px solid #e5e7eb;
+
+    display:flex;
+    gap:14px;
+    align-items:center;
+}
+
+.logo{
+
+    font-size:22px;
+    font-weight:700;
+
+}
+
+.search{
+
+    flex:1;
+
+    padding:15px 18px;
+
+    border:none;
+
+    border-radius:16px;
+
+    background:#eef2f7;
+
+    outline:none;
+
+    font-size:15px;
+}
+
+.grid{
+
+    padding:24px;
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fill,minmax(420px,1fr));
+
+    gap:24px;
+}
+
+.card{
+
+    background:white;
+
+    border-radius:28px;
+
+    overflow:hidden;
+
+    box-shadow:
+    0 8px 30px rgba(0,0,0,.06);
+
+    transition:.25s;
+}
+
+.card:hover{
+
+    transform:
+    translateY(-4px);
+
+}
+
+.card-top{
+
+    padding:18px;
+}
+
+.title{
+
+    font-size:18px;
+
+    font-weight:700;
+
+    margin-bottom:8px;
+}
+
+.username{
+
+    color:#2563eb;
+
+    text-decoration:none;
+
+    font-size:14px;
+}
+
+.frame{
+
+    width:100%;
+
+    height:700px;
+
+    border:none;
+
+    background:white;
+}
+
+.loading{
+
+    padding:40px;
+
+    text-align:center;
+
+    color:#6b7280;
+}
+
+@media(max-width:768px){
+
+    .grid{
+
+        grid-template-columns:1fr;
+    }
+
+    .frame{
+
+        height:600px;
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+
+<div class="logo">
+Telegram Explorer
+</div>
+
+<input
+type="text"
+id="search"
+class="search"
+placeholder="Search channels..."
+>
+
+</div>
+
+<div
+id="grid"
+class="grid"
+>
+
+<div class="loading">
+Loading channels...
+</div>
+
+</div>
+
+<script>
+
+let allChannels = []
+
+let currentPage = 1
+
+const perPage = 30
+
+async function loadChannels(){
+
+    const response =
+    await fetch('./channels_data.json')
+
+    allChannels =
+    await response.json()
+
+    render()
+}
+
+function render(){
+
+    const grid =
+    document.getElementById('grid')
+
+    grid.innerHTML = ''
+
+    const start =
+    (currentPage - 1) * perPage
+
+    const end =
+    start + perPage
+
+    const channels =
+    allChannels.slice(start,end)
+
+    channels.forEach(channel => {
+
+        if(!channel.username) return
+
+        const username =
+        channel.username
+
+        const title =
+        channel.title || username
+
+        const card =
+        document.createElement('div')
+
+        card.className = 'card'
+
+        card.innerHTML = `
+
+            <div class="card-top">
+
+                <div class="title">
+                    ${title}
+                </div>
+
+                <a
+                class="username"
+                href="https://t.me/${username}"
+                target="_blank"
+                >
+                @${username}
+                </a>
+
+            </div>
+
+            <iframe
+            class="frame"
+            loading="lazy"
+            src="https://telegram-proxy.mohamed-ahmed408408.workers.dev/"
+            >
+            </iframe>
+
+        `
+
+        grid.appendChild(card)
+
+    })
+
+    renderPagination()
+}
+
+function renderPagination(){
+
+    let old =
+    document.getElementById(
+    'pagination'
+    )
+
+    if(old){
+        old.remove()
+    }
+
+    const pages =
+    Math.ceil(
+      allChannels.length / perPage
+    )
+
+    const pagination =
+    document.createElement('div')
+
+    pagination.id = 'pagination'
+
+    pagination.style.textAlign =
+    'center'
+
+    pagination.style.padding =
+    '40px'
+
+    for(let i=1;i<=pages;i++){
+
+        const btn =
+        document.createElement('button')
+
+        btn.innerText = i
+
+        btn.style.margin = '5px'
+
+        btn.style.padding =
+        '12px 18px'
+
+        btn.style.border = 'none'
+
+        btn.style.borderRadius = '12px'
+
+        btn.style.cursor = 'pointer'
+
+        btn.onclick = ()=>{
+
+            currentPage = i
+
+            render()
+
+            window.scrollTo({
+                top:0,
+                behavior:'smooth'
+            })
+        }
+
+        pagination.appendChild(btn)
+    }
+
+    document.body.appendChild(
+    pagination
+    )
+}
+
+document
+.getElementById('search')
+.addEventListener('input',e=>{
+
+    const q =
+    e.target.value.toLowerCase()
+
+    allChannels =
+    allChannels.filter(channel => {
+
+        return (
+
+            channel.title
+            ?.toLowerCase()
+            .includes(q)
+
+            ||
+
+            channel.username
+            ?.toLowerCase()
+            .includes(q)
+
+        )
+
+    })
+
+    currentPage = 1
+
+    render()
+
+})
+
+loadChannels()
+
+
+
+</script>
+
+</body>
+
+</html>
