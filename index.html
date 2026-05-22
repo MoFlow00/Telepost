@@ -409,7 +409,8 @@ document.getElementById('search').addEventListener('input', applyFilter);
 async function loadChannels(){
   try {
     const r = await fetch('./channels_data.json');
-    allChannels = await r.json();
+    const data = await r.json();
+    allChannels = data.sort(() => Math.random() - 0.5);
   } catch(e){
     allChannels = [];
   }
