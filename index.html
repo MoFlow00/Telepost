@@ -27,13 +27,13 @@ rel="stylesheet"
 
 :root{
 
-  --bg:#fafafa;
-  --surface:#fff;
-  --border:#efefef;
+  --bg:#f5f7fb;
+  --surface:#ffffff;
+  --border:#dfe4ea;
 
-  --text:#111;
-  --text2:#666;
-  --text3:#999;
+  --text:#111827;
+  --text2:#6b7280;
+  --text3:#9ca3af;
 
   --accent:#0095f6;
 
@@ -57,16 +57,18 @@ body{
   top:0;
   z-index:999;
 
-  background:var(--surface);
+  background:rgba(255,255,255,.9);
+
+  backdrop-filter:blur(14px);
 
   border-bottom:
   1px solid var(--border);
 
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:10px;
 
-  padding:12px;
+  padding:14px;
 
   flex-wrap:wrap;
 
@@ -74,7 +76,7 @@ body{
 
 .logo{
 
-  font-size:20px;
+  font-size:22px;
   font-weight:700;
 
 }
@@ -88,14 +90,15 @@ body{
 .search{
 
   flex:1;
+  min-width:180px;
 
-  padding:10px 14px;
+  padding:11px 14px;
 
   border:none;
 
   border-radius:14px;
 
-  background:#f1f3f5;
+  background:#eef2f7;
 
   outline:none;
 
@@ -103,15 +106,15 @@ body{
 
 }
 
-.sort{
+.select{
 
-  padding:10px 14px;
+  padding:11px 14px;
 
   border:none;
 
   border-radius:14px;
 
-  background:#f1f3f5;
+  background:#eef2f7;
 
   outline:none;
 
@@ -125,11 +128,11 @@ body{
 
 .feed{
 
-  max-width:650px;
+  max-width:700px;
 
   margin:auto;
 
-  padding-bottom:40px;
+  padding:20px 14px 60px;
 
 }
 
@@ -139,10 +142,17 @@ body{
 
   background:var(--surface);
 
-  border-bottom:
+  border:
   1px solid var(--border);
 
+  border-radius:22px;
+
   overflow:hidden;
+
+  margin-bottom:24px;
+
+  box-shadow:
+  0 4px 20px rgba(0,0,0,.04);
 
 }
 
@@ -154,14 +164,14 @@ body{
   align-items:center;
   gap:12px;
 
-  padding:14px;
+  padding:16px;
 
 }
 
 .avatar{
 
-  width:42px;
-  height:42px;
+  width:46px;
+  height:46px;
 
   border-radius:50%;
 
@@ -177,7 +187,7 @@ body{
 
   color:white;
 
-  font-size:14px;
+  font-size:15px;
   font-weight:700;
 
   flex-shrink:0;
@@ -193,8 +203,8 @@ body{
 
 .post-channel{
 
-  font-size:14px;
-  font-weight:600;
+  font-size:15px;
+  font-weight:700;
 
   color:var(--text);
 
@@ -210,19 +220,19 @@ body{
 
 .post-date{
 
-  font-size:11px;
+  font-size:12px;
 
   color:var(--text3);
 
-  margin-top:2px;
+  margin-top:3px;
 
 }
 
 .open-btn{
 
-  padding:8px 14px;
+  padding:9px 15px;
 
-  border-radius:20px;
+  border-radius:30px;
 
   background:var(--accent);
 
@@ -231,7 +241,7 @@ body{
   text-decoration:none;
 
   font-size:12px;
-  font-weight:600;
+  font-weight:700;
 
   flex-shrink:0;
 
@@ -243,7 +253,7 @@ body{
 
   width:100%;
 
-  max-height:450px;
+  max-height:500px;
 
   object-fit:cover;
 
@@ -257,11 +267,11 @@ body{
 
 .post-text{
 
-  padding:14px;
+  padding:16px;
 
-  font-size:14px;
+  font-size:15px;
 
-  line-height:1.6;
+  line-height:1.75;
 
   word-break:break-word;
 
@@ -279,15 +289,19 @@ body{
 
 .post-foot{
 
-  padding:0 14px 14px;
+  padding:0 16px 16px;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
 
 }
 
 .views{
 
-  font-size:12px;
+  font-size:13px;
 
-  color:var(--text3);
+  color:var(--text2);
 
 }
 
@@ -295,7 +309,7 @@ body{
 
 .load-wrap{
 
-  padding:24px;
+  padding:30px 0;
 
   text-align:center;
 
@@ -303,18 +317,18 @@ body{
 
 .load-btn{
 
-  padding:12px 26px;
+  padding:14px 30px;
 
   border:none;
 
-  border-radius:30px;
+  border-radius:40px;
 
   background:var(--accent);
 
   color:white;
 
   font-size:14px;
-  font-weight:600;
+  font-weight:700;
 
   cursor:pointer;
 
@@ -323,6 +337,30 @@ body{
 .load-btn:disabled{
 
   opacity:.5;
+
+}
+
+/* MOBILE */
+
+@media(max-width:768px){
+
+  .header{
+
+    gap:8px;
+
+  }
+
+  .search{
+
+    width:100%;
+
+  }
+
+  .select{
+
+    flex:1;
+
+  }
 
 }
 
@@ -349,11 +387,11 @@ placeholder="Search channels..."
 
 <select
 id="sortSelect"
-class="sort"
+class="select"
 >
 
-  <option value="random">
-    🔀 Random
+  <option value="newest" selected>
+    🕒 Newest
   </option>
 
   <option value="views">
@@ -362,6 +400,37 @@ class="sort"
 
   <option value="az">
     🔤 A-Z
+  </option>
+
+  <option value="random">
+    🔀 Random
+  </option>
+
+</select>
+
+<select
+id="languageSelect"
+class="select"
+>
+
+  <option value="all">
+    🌍 All
+  </option>
+
+  <option value="arabic">
+    🇸🇦 Arabic
+  </option>
+
+  <option value="english">
+    🇺🇸 English
+  </option>
+
+  <option value="russian">
+    🇷🇺 Russian
+  </option>
+
+  <option value="turkish">
+    🇹🇷 Turkish
   </option>
 
 </select>
@@ -391,9 +460,9 @@ let isLoading = false;
 
 let searchQ = '';
 
-// ─────────────────────────────
+let currentLanguage = 'all';
+
 // HELPERS
-// ─────────────────────────────
 
 function shuffle(arr){
 
@@ -433,9 +502,28 @@ function matchSearch(ch,q){
 
 }
 
-// ─────────────────────────────
-// PARSE TELEGRAM HTML
-// ─────────────────────────────
+function detectLanguage(text){
+
+  if(!text)
+    return 'unknown';
+
+  if(/[؀-ۿ]/.test(text))
+    return 'arabic';
+
+  if(/[А-Яа-яЁё]/.test(text))
+    return 'russian';
+
+  if(/[şğıüçö]/i.test(text))
+    return 'turkish';
+
+  if(/[a-z]/i.test(text))
+    return 'english';
+
+  return 'other';
+
+}
+
+// PARSE HTML
 
 function parseLastPost(html){
 
@@ -541,9 +629,7 @@ function parseLastPost(html){
 
 }
 
-// ─────────────────────────────
 // CARD
-// ─────────────────────────────
 
 function makeCard(channel,post){
 
@@ -580,7 +666,8 @@ function makeCard(channel,post){
 
         <div class="post-date">
 
-          ${post.date || ''}
+          ${new Date(post.date)
+            .toLocaleString()}
 
         </div>
 
@@ -646,9 +733,7 @@ function makeCard(channel,post){
 
 }
 
-// ─────────────────────────────
 // FETCH
-// ─────────────────────────────
 
 async function fetchAndRender(channel){
 
@@ -695,6 +780,16 @@ async function fetchAndRender(channel){
 
     ) || 0;
 
+    channel.lastDate =
+    new Date(
+      post.date || 0
+    ).getTime();
+
+    channel.language =
+    detectLanguage(
+      post.text || ''
+    );
+
     const card =
     makeCard(channel,post);
 
@@ -718,9 +813,7 @@ async function fetchAndRender(channel){
 
 }
 
-// ─────────────────────────────
 // LOAD BATCH
-// ─────────────────────────────
 
 async function loadBatch(){
 
@@ -788,9 +881,7 @@ async function loadBatch(){
 
 }
 
-// ─────────────────────────────
 // INIT FEED
-// ─────────────────────────────
 
 function initFeed(){
 
@@ -837,9 +928,7 @@ function initFeed(){
 
 }
 
-// ─────────────────────────────
 // FILTERS
-// ─────────────────────────────
 
 function applyFilters(){
 
@@ -852,6 +941,12 @@ function applyFilters(){
       ch,
       searchQ
     )
+    &&
+    (
+      currentLanguage === 'all'
+      ||
+      ch.language === currentLanguage
+    )
 
   );
 
@@ -860,22 +955,14 @@ function applyFilters(){
     'sortSelect'
   ).value;
 
-  if(sort === 'random'){
-
-    filteredChannels =
-    shuffle(filteredChannels);
-
-  }
-
-  if(sort === 'az'){
+  if(sort === 'newest'){
 
     filteredChannels.sort(
       (a,b)=>
 
-      (a.title || a.username)
-      .localeCompare(
-        b.title || b.username
-      )
+      (b.lastDate || 0)
+      -
+      (a.lastDate || 0)
 
     );
 
@@ -894,13 +981,32 @@ function applyFilters(){
 
   }
 
+  if(sort === 'az'){
+
+    filteredChannels.sort(
+      (a,b)=>
+
+      (a.title || a.username)
+      .localeCompare(
+        b.title || b.username
+      )
+
+    );
+
+  }
+
+  if(sort === 'random'){
+
+    filteredChannels =
+    shuffle(filteredChannels);
+
+  }
+
   initFeed();
 
 }
 
-// ─────────────────────────────
 // LOAD JSON
-// ─────────────────────────────
 
 async function loadChannels(){
 
@@ -924,9 +1030,7 @@ async function loadChannels(){
 
 }
 
-// ─────────────────────────────
 // EVENTS
-// ─────────────────────────────
 
 document
 .getElementById('search')
@@ -949,7 +1053,18 @@ document
 
 });
 
-// ─────────────────────────────
+document
+.getElementById('languageSelect')
+.addEventListener(
+  'change',
+  e=>{
+
+    currentLanguage =
+    e.target.value;
+
+    applyFilters();
+
+});
 
 loadChannels();
 
