@@ -853,21 +853,32 @@ function buildPool(){
 
   );
 
-  if(activeSort === 'newest'){
+if(activeSort === 'newest'){
 
-    list.sort(
+  list.sort((a,b)=>{
 
-      (a,b)=>
-
-      (b.last_post_timestamp || 0)
-
-      -
+    const aScore =
 
       (a.last_post_timestamp || 0)
 
-    );
+      +
 
-  }
+      Math.random() * 86400000;
+
+    const bScore =
+
+      (b.last_post_timestamp || 0)
+
+      +
+
+      Math.random() * 86400000;
+
+    return bScore - aScore;
+
+  });
+
+}
+  
 
   if(activeSort === 'az'){
 
