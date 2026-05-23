@@ -206,391 +206,750 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 <div class="spinner-wrap" id="spinnerWrap"><div class="spinner"></div></div>
 
+<!-- IMPORTANT -->
+<!-- فقط استبدل الجزء ده داخل script -->
+<!-- من أول const WORKER -->
+<!-- لحد boot(); -->
+
 <script>
+
 const WORKER = 'https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=';
-const BATCH = 8;          // channels per load
-const CONCURRENT = 4;     // parallel fetches at a time /* Keep */
 
-const TAGS = [
-  {id:'all',  label:'✨ All'}, /* Keep */
-  {id:'news', label:'📰 News',  kw:['news','نيوز','أخبار','akhbar','press','media','جريدة']},
-  {id:'tech', label:'💻 Tech',  kw:['tech','تقنية','technology','dev','programming','برمجة']},
-  {id:'sport',label:'⚽ Sport', kw:['sport','كورة','football','soccer','رياضة','yalla','يلا']},
-  {id:'music',label:'🎵 Music', kw:['music','موسيقى','songs','اغاني','rap']},
-  {id:'film', label:'🎬 Film',  kw:['film','movie','series','مسلسل','افلام','drama','سينما']},
-  {id:'games',label:'🎮 Games', kw:['game','games','gaming','ppsspp','pubg','العاب','لعبة']},
-  {id:'crypto',label:'💰 Crypto',kw:['crypto','bitcoin','btc','eth','coin','عملة','binance']},
-  {id:'edu',  label:'📚 Edu',   kw:['edu','تعليم','learn','courses','كورس','tutorial']},
-  {id:'fun',  label:'😂 Fun',   kw:['fun','meme','funny','ميم','نكتة','humor']},
-  {id:'jobs', label:'💼 Jobs',  kw:['job','وظ','career','hire','recruitment','vacancy']},
-];
+const BATCH = 8;
+const CONCURRENT = 4;
 
-// ── Language detection ──────────────────────────────────── /* Keep */
+let allChannels = [];
+let pool = [];
+let poolIndex = 0;
+
+let isLoading = false;
+
+let searchQ = '';
+
+let activeTag = 'all';
+
+let activeLang = 'arabic';
+
+let activeSort = 'newest';
+
+
+// LANGUAGE DETECTION
+
 function detectLang(text){
-  if(!text) return 'unknown';
-  const plain = text.replace(/<[^>]*>/g,'');
+
+  if(!text) return 'other';
+
+  const plain =
+  text.replace(/<[^>]*>/g,'');
+
+  // Arabic + Persian
   if(/[\u0600-\u06FF]/.test(plain)){
-    // Arabic vs Persian (Farsi uses ک پ گ چ ژ)
-    if(/[پگچژکی]/.test(plain)) return 'persian';
+
+    if(/[پگچژکی]/.test(plain)){
+      return 'persian';
+    }
+
     return 'arabic';
   }
-  if(/[\u0590-\u05FF]/.test(plain)) return 'hebrew';
-  if(/[А-Яа-яЁё]/.test(plain))    return 'russian';
-  if(/[şğıüçöİĞŞ]/i.test(plain))   return 'turkish';
-  if(/[a-z]/i.test(plain))          return 'english';
+
+  // Russian
+  if(/[А-Яа-яЁё]/.test(plain)){
+    return 'russian';
+  }
+
+  // Turkish
+  if(/[şğıüçöİĞŞ]/i.test(plain)){
+    return 'turkish';
+  }
+
+  // English
+  if(/[a-z]/i.test(plain)){
+    return 'english';
+  }
+
   return 'other';
+
 }
 
-// ── Helpers ─────────────────────────────────────────────── /* Keep */
-const GRADS = [
-  ['#0095f6','#a855f7'],['#f59e0b','#ef4444'],['#10b981','#0ea5e9'],
-  ['#8b5cf6','#ec4899'],['#06b6d4','#6366f1'],['#f97316','#eab308'],
-];
-function avatarGrad(u){
-  let h=0; for(let c of(u||'')) h=(h*31+c.charCodeAt(0))&0xffffff;
-  const p=GRADS[h%GRADS.length];
-  return `linear-gradient(135deg,${p[0]},${p[1]})`;
-}
-function avatarText(t){
-  if(!t) return '?';
-  const w=t.trim().split(/\s+/);
-  return w.length>=2?(w[0][0]+w[1][0]).toUpperCase():t.slice(0,2).toUpperCase();
-}
-function formatDate(d){
-  if(!d) return '';
-  try{
-    const dt=new Date(d), now=new Date(), diff=(now-dt)/1000;
-    if(diff<60)     return 'Just now';
-    if(diff<3600)   return Math.floor(diff/60)+'m ago';
-    if(diff<86400)  return Math.floor(diff/3600)+'h ago';
-    if(diff<604800) return Math.floor(diff/86400)+'d ago';
-    return dt.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'});
-  }catch(e){return ''}
-}
+
+// SEARCH
+
 function matchSearch(ch,q){
+
   if(!q) return true;
-  return (ch.title||'').toLowerCase().includes(q)||(ch.username||'').toLowerCase().includes(q);
-}
-function matchTag(ch,tagId){
-  if(tagId==='all') return true;
-  const tag=TAGS.find(t=>t.id===tagId); if(!tag) return true;
-  const hay=((ch.title||'')+(ch.username||'')).toLowerCase();
-  return tag.kw.some(k=>hay.includes(k));
-}
 
-// ── Parse HTML → last post ──────────────────────────────── /* Keep */
-function parseLastPost(html){
-  const doc = new DOMParser().parseFromString(html,'text/html');
-  const posts = doc.querySelectorAll('.tgme_widget_message_wrap');
-  if(!posts.length) return null;
+  return (
 
-  // Try last post first, fallback to any post with content
-  let chosen = null;
-  for(let i=posts.length-1;i>=0;i--){
-    const p=posts[i];
-    const hasText = p.querySelector('.tgme_widget_message_text');
-    const hasImg  = p.querySelector('.tgme_widget_message_photo_wrap');
-    if(hasText||hasImg){ chosen=p; break; }
-  }
-  if(!chosen) chosen=posts[posts.length-1];
+    (ch.title || '')
+    .toLowerCase()
+    .includes(q)
 
-  // text
-  let text='';
-  const textEl=chosen.querySelector('.tgme_widget_message_text');
-  if(textEl) text=textEl.innerHTML.trim();
+    ||
 
-  // image — try photo, then video thumb, then sticker
-  let img=null;
-  const imgSelectors=[
-    '.tgme_widget_message_photo_wrap',
-    '.tgme_widget_message_video_thumb',
-    '.tgme_widget_message_sticker_wrap',
-  ];
-  for(const sel of imgSelectors){
-    const el=chosen.querySelector(sel);
-    if(el){
-      const style=el.getAttribute('style')||'';
-      const m=style.match(/url\(['"]?([^'")\s]+)['"]?\)/);
-      if(m){img=m[1];break;}
-      // try <img> inside
-      const imgTag=el.querySelector('img');
-      if(imgTag){img=imgTag.src||imgTag.getAttribute('src');break;}
-    }
-  }
+    (ch.username || '')
+    .toLowerCase()
+    .includes(q)
 
-  // date (ISO datetime)
-  let date='';
-  const dateEl=chosen.querySelector('.tgme_widget_message_date time');
-  if(dateEl) date=dateEl.getAttribute('datetime')||'';
+  );
 
-  // views
-  let views='';
-  const viewEl=chosen.querySelector('.tgme_widget_message_views');
-  if(viewEl) views=viewEl.textContent.trim();
-
-  return {text,img,date,views};
 }
 
-// ── Skeleton ────────────────────────────────────────────── /* Keep */
-function makeSkeleton(id){
-  const d=document.createElement('div');
-  d.className='skeleton'; d.id=id||'';
-  d.innerHTML=`
-    <div class="sk-row">
-      <div class="sk sk-circle"></div>
-      <div style="flex:1">
-        <div class="sk" style="height:12px;width:55%;margin-bottom:7px"></div>
-        <div class="sk" style="height:10px;width:30%"></div>
-      </div>
-    </div>
-    <div class="sk sk-img"></div>
-    <div class="sk" style="height:10px;width:90%;margin:10px 0 6px"></div>
-    <div class="sk" style="height:10px;width:65%"></div>
-  `;
-  return d;
-}
 
-// ── Card ────────────────────────────────────────────────── /* Keep */
-const LANG_FLAGS={'arabic':'🇸🇦','english':'🇺🇸','russian':'🇷🇺','turkish':'🇹🇷','persian':'🇮🇷','hebrew':'🇮🇱'};
-function makeCard(channel,post){
-  const {username,title}=channel;
-  const card=document.createElement('div');
-  card.className='post-card';
-  const longText=post.text&&post.text.replace(/<[^>]*>/g,'').length>320;
-  const flag=LANG_FLAGS[channel.detectedLang]||'';
-  card.innerHTML=`
-    <div class="post-head">
-      <div class="avatar" style="background:${avatarGrad(username)}">${avatarText(title||username)}</div>
-      <div class="post-meta">
-        <a class="post-channel" href="https://t.me/${username}" target="_blank">
-          ${title||username}${flag?`<span class="lang-badge">${flag}</span>`:''}
-        </a>
-        <div class="post-date">${formatDate(post.date)}</div>
-      </div>
-      <a class="open-btn" href="https://t.me/${username}" target="_blank">Open</a>
-    </div>
-    ${post.img?`<img class="post-img" src="${post.img}" loading="lazy" onerror="this.style.display='none'">` :''}
-    ${post.text?`<div class="post-text${longText?' clamped':''}">${post.text}</div>${longText?`<span class="read-more">Read more ▾</span>`:''}`:''}
-    <div class="post-foot">
-      ${post.views?`<div class="stat"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>${post.views}</div>`:''}
-      ${post.date?`<div class="stat"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${new Date(post.date).toLocaleDateString('en',{month:'short',day:'numeric'})}</div>`:''}
-    </div>
-  `;
-  // read more
-  const readMore=card.querySelector('.read-more');
-  if(readMore){
-    readMore.addEventListener('click',()=>{
-      card.querySelector('.post-text').classList.remove('clamped');
-      readMore.remove();
-    });
-  }
-  return card;
-}
+// DATE
 
-// ── State ─────────────────────────────────────────────────
-let allChannels=[];
-let pool=[];           // current filtered+sorted pool (pending fetch)
-let poolIndex=0;       // next index to fetch from pool
-let isLoading=false;
-let searchQ='';
-let activeTag='all';
-let activeLang='all';
-let activeSort='newest';
+function formatDate(d){
 
-// For "newest" sort: we first fetch all, then re-sort and render
-let newestMode=false;
-let fetchedPosts=[];   // {channel, post} pairs collected during newest prefetch
-let newestPrefetching=false;
+  if(!d) return '';
 
-// ── Insert card before sentinel ───────────────────────────
-function appendCard(el){
-  const feed=document.getElementById('feed');
-  const sentinel=document.getElementById('sentinel');
-  feed.insertBefore(el,sentinel);
-}
-
-// ── Fetch one channel, return {channel,post} or null ──────
-async function fetchOne(channel){ /* Keep */
   try{
-    const res=await fetch(WORKER+channel.username,{signal:AbortSignal.timeout(9000)});
-    const html=await res.text();
-    const post=parseLastPost(html);
-    if(!post||(!post.text&&!post.img)) return null;
-    const lang=detectLang(post.text||'');
-    channel.detectedLang=lang;
-    channel.lastDate=post.date?new Date(post.date).getTime():0;
-    channel.lastViews=parseInt((post.views||'0').replace(/[^\d]/g,''))||0;
-    return {channel,post};
-  }catch(e){return null;}
-}
 
-// ── Load next BATCH from pool ───── /* Keep */
-async function loadBatch(){
-  if(isLoading||poolIndex>=pool.length) return;
-  isLoading=true;
-  showSpinner(true);
+    const dt =
+    new Date(d);
 
-  // pick next BATCH
-  const slice=pool.slice(poolIndex,poolIndex+BATCH);
-  poolIndex+=BATCH;
+    const now =
+    new Date();
 
-  // fetch in groups of CONCURRENT
-  for(let i=0;i<slice.length;i+=CONCURRENT){
-    const group=slice.slice(i,i+CONCURRENT);
-    const results=await Promise.allSettled(group.map(ch=>fetchOne(ch)));
-    results.forEach(r=>{
-      if(r.status==='fulfilled'&&r.value){
-        const {channel,post}=r.value;
-        // language filter — check after fetch (real content)
-        if(activeLang!=='all'&&channel.detectedLang!==activeLang) return;
-        appendCard(makeCard(channel,post));
-      }
-    });
+    const diff =
+    (now-dt)/1000;
+
+    if(diff < 60){
+      return 'Just now';
+    }
+
+    if(diff < 3600){
+      return Math.floor(diff/60)+'m ago';
+    }
+
+    if(diff < 86400){
+      return Math.floor(diff/3600)+'h ago';
+    }
+
+    if(diff < 604800){
+      return Math.floor(diff/86400)+'d ago';
+    }
+
+    return dt.toLocaleDateString();
+
+  }catch(e){
+
+    return '';
+
   }
 
-  isLoading=false;
-  showSpinner(false);
 }
 
-// ── Delete completely: loadNewest(), newestPrefetching, fetchedPosts, newestNotice, all newest prefetch logic (CHANGE #4)
-// The loadNewest function and related variables are removed.
-// The logic for newest sorting is now handled in buildPool() using last_post_timestamp from channels_data.json.
-// The 'newestMode' variable is also removed as it's no longer needed.
-// The 'sort-notice' CSS class is removed as it was only used for the newest prefetch notice.
 
-// ── Spinner ─────────────────────────────────────────────── /* Keep */
-function showSpinner(v){
-  document.getElementById('spinnerWrap').classList.toggle('active',v);
-}
+// PARSE TELEGRAM
 
-// ── Init feed ─────────────────────────────────────────────
-function initFeed(){
-  poolIndex=0;
-  isLoading=false;
+function parseLastPost(html){
 
-  const feed=document.getElementById('feed');
-  feed.innerHTML='<div id="sentinel"></div>';
-  setupSentinel();
+  const doc =
+  new DOMParser()
+  .parseFromString(
+    html,
+    'text/html'
+  );
 
-  // CHANGE #3
-  // Removed newest prefetch logic. Sorting is now handled in buildPool().
-  loadBatch();
-}
+  const posts =
+  doc.querySelectorAll(
+    '.tgme_widget_message_wrap'
+  );
 
-// ── Infinite scroll via IntersectionObserver ────────────── /* Keep */
-let sentinelObserver=null;
-function setupSentinel(){
-  if(sentinelObserver) sentinelObserver.disconnect();
-  sentinelObserver=new IntersectionObserver(entries=>{
-    if(entries[0].isIntersecting&&!isLoading){
-      loadBatch();
+  if(!posts.length){
+    return null;
+  }
+
+  const last =
+  posts[posts.length - 1];
+
+  let text = '';
+
+  const textEl =
+  last.querySelector(
+    '.tgme_widget_message_text'
+  );
+
+  if(textEl){
+    text =
+    textEl.innerHTML.trim();
+  }
+
+  let img = null;
+
+  const imgEl =
+  last.querySelector(
+    '.tgme_widget_message_photo_wrap'
+  );
+
+  if(imgEl){
+
+    const style =
+    imgEl.getAttribute(
+      'style'
+    ) || '';
+
+    const match =
+    style.match(
+      /url\(['"]?([^'")]+)['"]?\)/
+    );
+
+    if(match){
+      img = match[1];
     }
-  },{rootMargin:'300px'});
-  const s=document.getElementById('sentinel');
-  if(s) sentinelObserver.observe(s);
+
+  }
+
+  let date = '';
+
+  const dateEl =
+  last.querySelector(
+    '.tgme_widget_message_date time'
+  );
+
+  if(dateEl){
+
+    date =
+    dateEl.getAttribute(
+      'datetime'
+    ) || '';
+
+  }
+
+  let views = '';
+
+  const viewEl =
+  last.querySelector(
+    '.tgme_widget_message_views'
+  );
+
+  if(viewEl){
+
+    views =
+    viewEl.textContent.trim();
+
+  }
+
+  return {
+
+    text,
+    img,
+    date,
+    views
+
+  };
+
 }
 
-// ── Build pool from allChannels ─────────────────────────── /* CHANGE #2 */
+
+// CARD
+
+function makeCard(channel,post){
+
+  const card =
+  document.createElement('div');
+
+  card.className =
+  'post-card';
+
+  card.innerHTML = `
+
+    <div class="post-head">
+
+      <div
+      class="avatar"
+      style="
+      background:
+      linear-gradient(
+      135deg,
+      #0095f6,
+      #7c3aed
+      )
+      "
+      >
+
+        ${(channel.title || channel.username)
+        .slice(0,2)
+        .toUpperCase()}
+
+      </div>
+
+      <div class="post-meta">
+
+        <a
+        class="post-channel"
+        href="https://t.me/${channel.username}"
+        target="_blank"
+        >
+
+        ${channel.title || channel.username}
+
+        </a>
+
+        <div class="post-date">
+
+          ${formatDate(post.date)}
+
+        </div>
+
+      </div>
+
+      <a
+      class="open-btn"
+      href="https://t.me/${channel.username}"
+      target="_blank"
+      >
+
+      Open
+
+      </a>
+
+    </div>
+
+    ${
+      post.img
+
+      ?
+
+      `<img
+      class="post-img"
+      src="${post.img}"
+      loading="lazy"
+      >`
+
+      :
+
+      ''
+
+    }
+
+    ${
+      post.text
+
+      ?
+
+      `<div class="post-text">
+
+      ${post.text}
+
+      </div>`
+
+      :
+
+      ''
+
+    }
+
+    <div class="post-foot">
+
+      <div class="stat">
+
+        👁️ ${post.views || 0}
+
+      </div>
+
+    </div>
+
+  `;
+
+  return card;
+
+}
+
+
+// FETCH ONE
+
+async function fetchOne(channel){
+
+  try{
+
+    const res =
+    await fetch(
+
+      WORKER +
+      channel.username,
+
+      {
+        signal:
+        AbortSignal.timeout(9000)
+      }
+
+    );
+
+    const html =
+    await res.text();
+
+    const post =
+    parseLastPost(html);
+
+    if(
+      !post
+      ||
+      (
+        !post.text
+        &&
+        !post.img
+      )
+    ){
+
+      return null;
+
+    }
+
+    const lang =
+    detectLang(
+      post.text || ''
+    );
+
+    channel.detectedLang =
+    lang;
+
+    // FILTER AFTER FETCH
+
+    if(
+
+      activeLang !== 'all'
+
+      &&
+
+      lang !== activeLang
+
+    ){
+
+      return null;
+
+    }
+
+    channel.lastViews =
+    parseInt(
+
+      (post.views || '0')
+      .replace(/[^\d]/g,'')
+
+    ) || 0;
+
+    channel.lastDate =
+    post.date
+    ?
+    new Date(post.date)
+    .getTime()
+    :
+    0;
+
+    return {
+
+      channel,
+      post
+
+    };
+
+  }catch(e){
+
+    return null;
+
+  }
+
+}
+
+
+// LOAD BATCH
+
+async function loadBatch(){
+
+  if(
+    isLoading
+    ||
+    poolIndex >= pool.length
+  ){
+    return;
+  }
+
+  isLoading = true;
+
+  const slice =
+  pool.slice(
+    poolIndex,
+    poolIndex + BATCH
+  );
+
+  poolIndex += BATCH;
+
+  for(
+
+    let i = 0;
+
+    i < slice.length;
+
+    i += CONCURRENT
+
+  ){
+
+    const group =
+    slice.slice(
+      i,
+      i + CONCURRENT
+    );
+
+    const results =
+    await Promise.allSettled(
+
+      group.map(
+        ch => fetchOne(ch)
+      )
+
+    );
+
+    results.forEach(r => {
+
+      if(
+
+        r.status === 'fulfilled'
+
+        &&
+
+        r.value
+
+      ){
+
+        const card =
+        makeCard(
+          r.value.channel,
+          r.value.post
+        );
+
+        document
+        .getElementById('feed')
+        .appendChild(card);
+
+      }
+
+    });
+
+  }
+
+  isLoading = false;
+
+}
+
+
+// BUILD POOL
+
 function buildPool(){
-  let list=allChannels.filter(ch=>
+
+  let list =
+  allChannels.filter(ch =>
+
     ch.username
+
     &&
-    matchSearch(ch,searchQ)
-    &&
-    matchTag(ch,activeTag)
+
+    matchSearch(
+      ch,
+      searchQ
+    )
+
   );
 
   // NEWEST
+
   if(activeSort === 'newest'){
+
     list.sort(
+
       (a,b)=>
+
       (b.last_post_timestamp || 0)
+
       -
+
       (a.last_post_timestamp || 0)
+
     );
+
   }
 
   // VIEWS
+
   if(activeSort === 'views'){
+
     list.sort(
+
       (a,b)=>
+
       (b.lastViews || 0)
+
       -
+
       (a.lastViews || 0)
+
     );
+
   }
 
   // A-Z
+
   if(activeSort === 'az'){
+
     list.sort(
+
       (a,b)=>
+
       (a.title || a.username)
       .localeCompare(
         b.title || b.username
       )
+
     );
+
   }
 
   // RANDOM
+
   if(activeSort === 'random'){
+
     list =
     list.sort(
       ()=>Math.random()-.5
     );
+
   }
 
-  pool=list;
+  pool = list;
+
 }
 
-// ── Apply all filters → rebuild → init ───────────────────
+
+// INIT
+
+function initFeed(){
+
+  poolIndex = 0;
+
+  document
+  .getElementById('feed')
+  .innerHTML = '';
+
+  loadBatch();
+
+}
+
+
+// APPLY FILTERS
+
 function applyFilters(){
+
   buildPool();
+
   initFeed();
+
 }
 
-// ── Tags ────────────────────────────────────────────────── /* Keep */
-function buildTags(){
-  const bar=document.getElementById('tagsBar');
-  TAGS.forEach(tag=>{
-    const btn=document.createElement('button');
-    btn.className='tag'+(tag.id==='all'?' active':'');
-    btn.textContent=tag.label;
-    btn.onclick=()=>{
-      document.querySelectorAll('.tag').forEach(t=>t.classList.remove('active'));
-      btn.classList.add('active');
-      activeTag=tag.id;
-      applyFilters();
-    };
-    bar.appendChild(btn);
-  });
-}
 
-// ── Events ──────────────────────────────────────────────── /* Keep */
-document.getElementById('search').addEventListener('input',e=>{
-  searchQ=e.target.value.toLowerCase().trim();
+// EVENTS
+
+document
+.getElementById('search')
+.addEventListener('input',e=>{
+
+  searchQ =
+  e.target.value
+  .toLowerCase()
+  .trim();
+
   applyFilters();
-});
-document.getElementById('sortSelect').addEventListener('change',e=>{
-  activeSort=e.target.value;
-  applyFilters();
-});
-document.getElementById('langSelect').addEventListener('change',e=>{
-  activeLang=e.target.value;
-  applyFilters();
+
 });
 
-// ── Boot ────────────────────────────────────────────────── /* Keep */
+document
+.getElementById('sortSelect')
+.addEventListener('change',e=>{
+
+  activeSort =
+  e.target.value;
+
+  applyFilters();
+
+});
+
+document
+.getElementById('langSelect')
+.addEventListener('change',e=>{
+
+  activeLang =
+  e.target.value;
+
+  applyFilters();
+
+});
+
+
+// INFINITE SCROLL
+
+window.addEventListener('scroll',()=>{
+
+  if(
+
+    window.innerHeight
+    +
+    window.scrollY
+
+    >=
+
+    document.body.offsetHeight
+    - 1200
+
+  ){
+
+    loadBatch();
+
+  }
+
+});
+
+
+// BOOT
+
 async function boot(){
+
   try{
-    const r=await fetch('./channels_data.json');
-    allChannels=await r.json();
-    allChannels=allChannels.filter(c=>c.username);
-  }catch(e){allChannels=[];}
-  buildTags();
+
+    const r =
+    await fetch(
+      './channels_data.json'
+    );
+
+    allChannels =
+    await r.json();
+
+    allChannels =
+    allChannels.filter(
+      c=>c.username
+    );
+
+  }catch(e){
+
+    allChannels = [];
+
+  }
+
+  // DEFAULTS
+
+  document
+  .getElementById('langSelect')
+  .value = 'arabic';
+
+  document
+  .getElementById('sortSelect')
+  .value = 'newest';
+
   applyFilters();
+
 }
 
 boot();
+
 </script>
+
+
+  
 </body>
 </html>
