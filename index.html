@@ -212,27 +212,33 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <script>
 
-const WORKER = 'https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=';
+const WORKER =
+'https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=';
 
-const BATCH = 8;
-const CONCURRENT = 4;
+const BATCH = 20;
+
+const CONCURRENT = 12;
+
+const CACHE = new Map();
 
 let allChannels = [];
+
 let pool = [];
+
 let poolIndex = 0;
 
 let isLoading = false;
 
 let searchQ = '';
 
-let activeTag = 'all';
-
 let activeLang = 'arabic';
 
 let activeSort = 'newest';
 
 
-// LANGUAGE DETECTION
+// ─────────────────────────────
+// LANGUAGE
+// ─────────────────────────────
 
 function detectLang(text){
 
@@ -241,7 +247,6 @@ function detectLang(text){
   const plain =
   text.replace(/<[^>]*>/g,'');
 
-  // Arabic + Persian
   if(/[\u0600-\u06FF]/.test(plain)){
 
     if(/[پگچژکی]/.test(plain)){
@@ -249,19 +254,17 @@ function detectLang(text){
     }
 
     return 'arabic';
+
   }
 
-  // Russian
   if(/[А-Яа-яЁё]/.test(plain)){
     return 'russian';
   }
 
-  // Turkish
   if(/[şğıüçöİĞŞ]/i.test(plain)){
     return 'turkish';
   }
 
-  // English
   if(/[a-z]/i.test(plain)){
     return 'english';
   }
@@ -271,8 +274,9 @@ function detectLang(text){
 }
 
 
+// ─────────────────────────────
 // SEARCH
-
+// ─────────────────────────────
 
 function matchSearch(ch,q){
 
@@ -306,7 +310,10 @@ function matchSearch(ch,q){
 
 }
 
+
+// ─────────────────────────────
 // DATE
+// ─────────────────────────────
 
 function formatDate(d){
 
@@ -350,7 +357,9 @@ function formatDate(d){
 }
 
 
-// PARSE TELEGRAM
+// ─────────────────────────────
+// PARSE
+// ─────────────────────────────
 
 function parseLastPost(html){
 
@@ -452,7 +461,9 @@ function parseLastPost(html){
 }
 
 
+// ─────────────────────────────
 // CARD
+// ─────────────────────────────
 
 function makeCard(channel,post){
 
@@ -478,9 +489,9 @@ function makeCard(channel,post){
       "
       >
 
-        ${(channel.title || channel.username)
-        .slice(0,2)
-        .toUpperCase()}
+      ${(channel.title || channel.username)
+      .slice(0,2)
+      .toUpperCase()}
 
       </div>
 
@@ -567,9 +578,19 @@ function makeCard(channel,post){
 }
 
 
-// FETCH ONE
+// ─────────────────────────────
+// FETCH
+// ─────────────────────────────
 
 async function fetchOne(channel){
+
+  if(CACHE.has(channel.username)){
+
+    return CACHE.get(
+      channel.username
+    );
+
+  }
 
   try{
 
@@ -581,7 +602,7 @@ async function fetchOne(channel){
 
       {
         signal:
-        AbortSignal.timeout(9000)
+        AbortSignal.timeout(4000)
       }
 
     );
@@ -611,15 +632,6 @@ async function fetchOne(channel){
       post.text || ''
     );
 
-    channel.detectedLang =
-    lang;
-
-    channel.lastText =
-(post.text || '')
-.replace(/<[^>]*>/g,'');
-
-    // FILTER AFTER FETCH
-
     if(
 
       activeLang !== 'all'
@@ -634,6 +646,10 @@ async function fetchOne(channel){
 
     }
 
+    channel.lastText =
+    (post.text || '')
+    .replace(/<[^>]*>/g,'');
+
     channel.lastViews =
     parseInt(
 
@@ -642,20 +658,19 @@ async function fetchOne(channel){
 
     ) || 0;
 
-    channel.lastDate =
-    post.date
-    ?
-    new Date(post.date)
-    .getTime()
-    :
-    0;
-
-    return {
+    const result = {
 
       channel,
       post
 
     };
+
+    CACHE.set(
+      channel.username,
+      result
+    );
+
+    return result;
 
   }catch(e){
 
@@ -666,7 +681,9 @@ async function fetchOne(channel){
 }
 
 
-// LOAD BATCH
+// ─────────────────────────────
+// LOAD
+// ─────────────────────────────
 
 async function loadBatch(){
 
@@ -687,6 +704,9 @@ async function loadBatch(){
   );
 
   poolIndex += BATCH;
+
+  const fragment =
+  document.createDocumentFragment();
 
   for(
 
@@ -725,15 +745,14 @@ async function loadBatch(){
 
       ){
 
-        const card =
-        makeCard(
-          r.value.channel,
-          r.value.post
-        );
+        fragment.appendChild(
 
-        document
-        .getElementById('feed')
-        .appendChild(card);
+          makeCard(
+            r.value.channel,
+            r.value.post
+          )
+
+        );
 
       }
 
@@ -741,12 +760,18 @@ async function loadBatch(){
 
   }
 
+  document
+  .getElementById('feed')
+  .appendChild(fragment);
+
   isLoading = false;
 
 }
 
 
-// BUILD POOL
+// ─────────────────────────────
+// SORT
+// ─────────────────────────────
 
 function buildPool(){
 
@@ -764,8 +789,6 @@ function buildPool(){
 
   );
 
-  // NEWEST
-
   if(activeSort === 'newest'){
 
     list.sort(
@@ -782,7 +805,29 @@ function buildPool(){
 
   }
 
-  // VIEWS
+  if(activeSort === 'az'){
+
+    list.sort(
+
+      (a,b)=>
+
+      (a.title || a.username)
+      .localeCompare(
+        b.title || b.username
+      )
+
+    );
+
+  }
+
+  if(activeSort === 'random'){
+
+    list =
+    list.sort(
+      ()=>Math.random()-.5
+    );
+
+  }
 
   if(activeSort === 'views'){
 
@@ -800,40 +845,14 @@ function buildPool(){
 
   }
 
-  // A-Z
-
-  if(activeSort === 'az'){
-
-    list.sort(
-
-      (a,b)=>
-
-      (a.title || a.username)
-      .localeCompare(
-        b.title || b.username
-      )
-
-    );
-
-  }
-
-  // RANDOM
-
-  if(activeSort === 'random'){
-
-    list =
-    list.sort(
-      ()=>Math.random()-.5
-    );
-
-  }
-
   pool = list;
 
 }
 
 
+// ─────────────────────────────
 // INIT
+// ─────────────────────────────
 
 function initFeed(){
 
@@ -848,7 +867,9 @@ function initFeed(){
 }
 
 
-// APPLY FILTERS
+// ─────────────────────────────
+// APPLY
+// ─────────────────────────────
 
 function applyFilters(){
 
@@ -859,7 +880,9 @@ function applyFilters(){
 }
 
 
+// ─────────────────────────────
 // EVENTS
+// ─────────────────────────────
 
 document
 .getElementById('search')
@@ -897,7 +920,9 @@ document
 });
 
 
-// INFINITE SCROLL
+// ─────────────────────────────
+// SCROLL
+// ─────────────────────────────
 
 window.addEventListener('scroll',()=>{
 
@@ -910,7 +935,7 @@ window.addEventListener('scroll',()=>{
     >=
 
     document.body.offsetHeight
-    - 1200
+    - 1800
 
   ){
 
@@ -921,7 +946,9 @@ window.addEventListener('scroll',()=>{
 });
 
 
+// ─────────────────────────────
 // BOOT
+// ─────────────────────────────
 
 async function boot(){
 
@@ -946,8 +973,6 @@ async function boot(){
 
   }
 
-  // DEFAULTS
-
   document
   .getElementById('langSelect')
   .value = 'arabic';
@@ -962,8 +987,8 @@ async function boot(){
 
 boot();
 
-</script>
-
+</script>    
+    
 
   
 </body>
