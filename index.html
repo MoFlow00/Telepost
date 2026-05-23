@@ -273,26 +273,38 @@ function detectLang(text){
 
 // SEARCH
 
+
 function matchSearch(ch,q){
 
   if(!q) return true;
 
+  const title =
+  (ch.title || '')
+  .toLowerCase();
+
+  const user =
+  (ch.username || '')
+  .toLowerCase();
+
+  const text =
+  (ch.lastText || '')
+  .toLowerCase();
+
   return (
 
-    (ch.title || '')
-    .toLowerCase()
-    .includes(q)
+    title.includes(q)
 
     ||
 
-    (ch.username || '')
-    .toLowerCase()
-    .includes(q)
+    user.includes(q)
+
+    ||
+
+    text.includes(q)
 
   );
 
 }
-
 
 // DATE
 
@@ -601,6 +613,10 @@ async function fetchOne(channel){
 
     channel.detectedLang =
     lang;
+
+    channel.lastText =
+(post.text || '')
+.replace(/<[^>]*>/g,'');
 
     // FILTER AFTER FETCH
 
