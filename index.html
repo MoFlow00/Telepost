@@ -219,6 +219,39 @@ const BATCH = 20;
 
 const CONCURRENT = 12;
 
+  const NSFW_WORDS = [
+
+  // english
+
+  'porn',
+  'xxx',
+  'sex',
+  'nude',
+  'onlyfans',
+  'nsfw',
+  'escort',
+  'adult',
+  'camgirl',
+  'hentai',
+
+  // arabic
+
+  'سكس',
+  'نيك',
+  'ممحونة',
+  'ممحون',
+  'اباحي',
+  'جنس',
+  'شرموطة',
+
+  // common domains
+
+  'xnxx',
+  'xvideos',
+  'pornhub'
+
+];
+
 const CACHE = new Map();
 
 let allChannels = [];
@@ -612,6 +645,37 @@ async function fetchOne(channel){
 
     const post =
     parseLastPost(html);
+
+const lower = (
+
+  (
+    post?.text || ''
+  )
+
+  +
+
+  ' '
+
+  +
+
+  (
+    channel.title || ''
+  )
+
+).toLowerCase();
+
+const blocked =
+NSFW_WORDS.some(
+word =>
+lower.includes(word)
+);
+
+if(blocked){
+
+  return null;
+
+}
+    
 
     if(
       !post
