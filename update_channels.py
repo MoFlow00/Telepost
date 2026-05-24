@@ -13,6 +13,54 @@ HEADERS = {
 INPUT_FILE = "channels_data.json"
 
 # ─────────────────────────────
+# HELPERS
+# ─────────────────────────────
+
+def parse_number(text):
+
+    if not text:
+        return 0
+
+    try:
+
+        text = (
+            text
+            .strip()
+            .upper()
+            .replace(",", "")
+        )
+
+        # 1.2K
+        if "K" in text:
+
+            return int(
+                float(
+                    text.replace("K", "")
+                ) * 1000
+            )
+
+        # 2.5M
+        if "M" in text:
+
+            return int(
+                float(
+                    text.replace("M", "")
+                ) * 1000000
+            )
+
+        digits = "".join(
+            c for c in text
+            if c.isdigit()
+        )
+
+        return int(digits)
+
+    except Exception:
+
+        return 0
+
+
+# ─────────────────────────────
 # LOAD JSON
 # ─────────────────────────────
 
@@ -28,12 +76,15 @@ try:
 
 except Exception as e:
 
-    print("FAILED TO LOAD JSON:", e)
+    print(
+        "FAILED TO LOAD JSON:",
+        e
+    )
 
     channels = []
 
 # ─────────────────────────────
-# UPDATE CHANNELS
+# UPDATE
 # ─────────────────────────────
 
 total = len(channels)
@@ -88,11 +139,13 @@ for index, channel in enumerate(channels):
             "html.parser"
         )
 
+        # ─────────────────────────────
+        # POSTS
+        # ─────────────────────────────
+
         posts = soup.select(
             ".tgme_widget_message"
         )
-
-        # NO POSTS
 
         if not posts:
 
@@ -105,11 +158,13 @@ for index, channel in enumerate(channels):
 
         last = posts[-1]
 
+        # ─────────────────────────────
+        # POST ID
+        # ─────────────────────────────
+
         data_post = last.get(
             "data-post"
         )
-
-        # NO POST ID
 
         if not data_post:
 
@@ -119,8 +174,6 @@ for index, channel in enumerate(channels):
             )
 
             continue
-
-        # BAD POST ID
 
         try:
 
@@ -138,7 +191,9 @@ for index, channel in enumerate(channels):
 
             continue
 
+        # ─────────────────────────────
         # DATE
+        # ─────────────────────────────
 
         time_el = last.select_one(
             "time"
@@ -154,7 +209,9 @@ for index, channel in enumerate(channels):
                 )
             )
 
+        # ─────────────────────────────
         # TIMESTAMP
+        # ─────────────────────────────
 
         timestamp = 0
 
@@ -185,7 +242,75 @@ for index, channel in enumerate(channels):
                     e
                 )
 
-        # SAVE DATA
+        # ─────────────────────────────
+        # VIEWS
+        # ─────────────────────────────
+
+        views = 0
+
+        views_el = last.select_one(
+            ".tgme_widget_message_views"
+        )
+
+        if views_el:
+
+            views = parse_number(
+                views_el.text
+            )
+
+        # ─────────────────────────────
+        # SUBSCRIBERS
+        # ─────────────────────────────
+
+        subscribers = 0
+
+        subs_wrap = soup.select_one(
+            ".tgme_channel_info_counters"
+        )
+
+        if subs_wrap:
+
+            counters = subs_wrap.select(
+                ".tgme_channel_info_counter"
+            )
+
+            for counter in counters:
+
+                counter_type = counter.select_one(
+                    ".counter_type"
+                )
+
+                if not counter_type:
+                    continue
+
+                label = (
+                    counter_type
+                    .text
+                    .strip()
+                    .lower()
+                )
+
+                if (
+                    "subscriber" in label
+                    or
+                    "member" in label
+                ):
+
+                    value = counter.select_one(
+                        ".counter_value"
+                    )
+
+                    if value:
+
+                        subscribers = parse_number(
+                            value.text
+                        )
+
+                    break
+
+        # ─────────────────────────────
+        # SAVE
+        # ─────────────────────────────
 
         channel[
             "last_post_id"
@@ -199,13 +324,31 @@ for index, channel in enumerate(channels):
             "last_post_timestamp"
         ] = timestamp
 
+        channel[
+            "last_post_views"
+        ] = views
+
+        channel[
+            "subscribers"
+        ] = subscribers
+
         print(
+
             "UPDATED:",
+
             username,
-            post_id
+
+            "| POSTS:",
+            post_id,
+
+            "| VIEWS:",
+            views,
+
+            "| SUBS:",
+            subscribers
+
         )
 
-        # SMALL DELAY
         # avoid telegram rate limit
 
         time.sleep(0.7)
