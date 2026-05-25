@@ -4,461 +4,141 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TELEPOSTS</title>
-
-<link
-href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-rel="stylesheet"
-/>
-
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-}
-
+*{margin:0;padding:0;box-sizing:border-box}
 :root{
-
-  --bg:#f5f7fb;
-  --surface:#ffffff;
-  --border:#e6ebf2;
-
-  --text:#111111;
-  --text2:#666666;
-  --text3:#9aa4b2;
-
-  --accent:#0095f6;
-
-  --tag-bg:#eef2f7;
-
+  --bg:#f5f7fb;--surface:#fff;--border:#e5e9f0;
+  --text:#111;--text2:#555;--text3:#9ca3af;
+  --accent:#0095f6;--tag-bg:#eef2f7;
+  --header-h:54px;--tags-h:46px;
 }
-
 @media(prefers-color-scheme:dark){
-
   :root{
-
-    --bg:#0a0a0a;
-    --surface:#141414;
-    --border:#242424;
-
-    --text:#f5f5f5;
-    --text2:#aaaaaa;
-    --text3:#666666;
-
-    --tag-bg:#1f1f1f;
-
+    --bg:#0a0a0a;--surface:#141414;--border:#242424;
+    --text:#f0f0f0;--text2:#aaa;--text3:#555;--tag-bg:#1e1e1e;
   }
-
 }
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
-body{
-
-  background:var(--bg);
-
-  color:var(--text);
-
-  font-family:'Inter',sans-serif;
-
-  min-height:100vh;
-
-}
-
-/* HEADER */
-
+/* ── HEADER ── */
 .header{
-
-  position:sticky;
-  top:0;
-  z-index:999;
-
-  background:rgba(255,255,255,.9);
-
+  position:sticky;top:0;z-index:999;
+  background:rgba(255,255,255,.92);
   backdrop-filter:blur(16px);
-
-  border-bottom:
-  1px solid var(--border);
-
-  display:flex;
-  align-items:center;
-  gap:10px;
-
-  padding:12px;
-
+  border-bottom:1px solid var(--border);
+  height:var(--header-h);
+  display:flex;align-items:center;
+  padding:0 14px;gap:10px;
 }
-
 @media(prefers-color-scheme:dark){
-
-  .header{
-
-    background:rgba(20,20,20,.9);
-
-  }
-
+  .header{background:rgba(20,20,20,.92)}
 }
-
-.logo{
-
-  font-size:18px;
-  font-weight:700;
-
-  flex-shrink:0;
-
-}
-
-.logo span{
-
-  color:var(--accent);
-
-}
-
-.search-wrap{
-
-  flex:1;
-  position:relative;
-
-}
-
-.search-wrap svg{
-
-  position:absolute;
-
-  left:10px;
-  top:50%;
-
-  transform:translateY(-50%);
-
-  width:15px;
-  height:15px;
-
-  stroke:var(--text3);
-
-  fill:none;
-
-  stroke-width:2;
-
-}
-
+.logo{font-size:18px;font-weight:700;flex-shrink:0;color:var(--text);letter-spacing:-.3px}
+.logo span{color:var(--accent)}
+.search-wrap{flex:1;position:relative;min-width:0}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--text3);fill:none;stroke-width:2;stroke-linecap:round;pointer-events:none}
 .search{
-
-  width:100%;
-
-  padding:9px 12px 9px 34px;
-
-  border:none;
-
-  border-radius:999px;
-
-  background:var(--tag-bg);
-
-  color:var(--text);
-
-  outline:none;
-
-  font-size:13px;
-
+  width:100%;padding:8px 10px 8px 32px;
+  border:1.5px solid var(--border);border-radius:22px;
+  background:var(--tag-bg);color:var(--text);
+  font-size:13px;outline:none;font-family:'Inter',sans-serif;
+  transition:border-color .2s;
 }
+.search:focus{border-color:var(--accent)}
 
-/* LANGUAGE */
-
-.lang-select{
-
-  border:none;
-
-  background:var(--tag-bg);
-
-  color:var(--text);
-
-  border-radius:999px;
-
-  padding:9px 12px;
-
-  font-size:12px;
-
-  cursor:pointer;
-
+/* sort + language selects */
+.hdr-select{
+  padding:7px 10px;border:1.5px solid var(--border);
+  border-radius:22px;background:var(--tag-bg);color:var(--text);
+  font-size:12px;font-weight:500;outline:none;cursor:pointer;
+  font-family:'Inter',sans-serif;flex-shrink:0;
+  transition:border-color .2s;
 }
+.hdr-select:focus{border-color:var(--accent)}
 
-/* SECTIONS */
-
-.sections{
-
-  position:sticky;
-
-  top:64px;
-
-  z-index:998;
-
-  display:flex;
-
-  gap:8px;
-
-  overflow-x:auto;
-
-  padding:12px;
-
-  background:var(--bg);
-
+/* ── TAGS ── */
+.tags-bar{
+  position:sticky;top:var(--header-h);z-index:998;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  height:var(--tags-h);
+  display:flex;align-items:center;gap:6px;
+  padding:0 12px;overflow-x:auto;scrollbar-width:none;
 }
-
-.sections::-webkit-scrollbar{
-
-  display:none;
-
+.tags-bar::-webkit-scrollbar{display:none}
+.tag{
+  flex-shrink:0;padding:5px 13px;border-radius:22px;
+  font-size:12px;font-weight:500;cursor:pointer;
+  background:var(--tag-bg);color:var(--text2);
+  border:1.5px solid transparent;transition:all .15s;white-space:nowrap;
 }
+.tag:hover{border-color:var(--accent);color:var(--accent)}
+.tag.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-.section-btn{
+/* ── FEED ── */
+.feed{max-width:640px;margin:0 auto;padding:16px 12px 60px;display:flex;flex-direction:column;gap:16px}
 
-  border:none;
-
-  background:var(--tag-bg);
-
-  color:var(--text);
-
-  padding:10px 14px;
-
-  border-radius:999px;
-
-  font-size:13px;
-
-  cursor:pointer;
-
-  white-space:nowrap;
-
-  flex-shrink:0;
-
-}
-
-.section-btn.active{
-
-  background:var(--accent);
-
-  color:white;
-
-}
-
-/* FEED */
-
-.feed{
-
-  max-width:680px;
-
-  margin:auto;
-
-  padding:10px 12px 60px;
-
-  display:flex;
-
-  flex-direction:column;
-
-  gap:16px;
-
-}
-
-/* CARD */
-
+/* ── CARD ── */ /* CHANGE #7 */
 .post-card{
-
   background:var(--surface);
-
-  border:
-  1px solid var(--border);
-
-  border-radius:22px;
-
-  overflow:hidden;
-
-  box-shadow:
-  0 4px 16px rgba(0,0,0,.06);
-
+  border:1px solid var(--border); /* Keep */
+  border-radius:20px;overflow:hidden; /* Keep */
+  box-shadow:0 4px 16px rgba(0,0,0,.08); /* Stronger shadow */
+  animation:fadeUp .3s ease both;
 }
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
-.post-head{
-
-  display:flex;
-
-  align-items:center;
-
-  gap:12px;
-
-  padding:14px;
-
-}
-
+.post-head{display:flex;align-items:center;gap:11px;padding:13px 14px 10px}
 .avatar{
-
-  width:44px;
-  height:44px;
-
-  border-radius:50%;
-
-  display:flex;
-
-  align-items:center;
-  justify-content:center;
-
-  color:white;
-
-  font-size:14px;
-  font-weight:700;
-
-  flex-shrink:0;
-
-  background:
-  linear-gradient(
-    135deg,
-    #0095f6,
-    #7c3aed
-  );
-
+  width:42px;height:42px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:14px;font-weight:700;flex-shrink:0;
 }
-
-.post-meta{
-
-  flex:1;
-  min-width:0;
-
-}
-
+.post-meta{flex:1;min-width:0}
 .post-channel{
-
-  color:var(--text);
-
-  text-decoration:none;
-
-  font-size:14px;
-
-  font-weight:700;
-
-  display:block;
-
-  white-space:nowrap;
-
-  overflow:hidden;
-
-  text-overflow:ellipsis;
-
+  font-size:14px;font-weight:700;color:var(--text);
+  text-decoration:none;display:block;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-
-.post-date{
-
-  font-size:11px;
-
-  color:var(--text3);
-
-  margin-top:3px;
-
+.post-channel:hover{color:var(--accent)}
+.post-date{font-size:11px;color:var(--text3);margin-top:2px}
+.lang-badge{
+  display:inline-block;margin-left:5px;
+  font-size:10px;padding:1px 6px;border-radius:8px;
+  background:var(--tag-bg);color:var(--text3);font-weight:600;
 }
-
 .open-btn{
-
-  border:none;
-
-  background:var(--accent);
-
-  color:white;
-
-  border-radius:999px;
-
-  padding:8px 14px;
-
-  font-size:12px;
-
-  font-weight:700;
-
-  text-decoration:none;
-
-  flex-shrink:0;
-
+  padding:7px 14px;border-radius:22px;
+  background:var(--accent);color:#fff;
+  text-decoration:none;font-size:12px;font-weight:700;
+  flex-shrink:0;transition:opacity .2s;
 }
+.open-btn:hover{opacity:.85}
 
-.post-img{
-
-  width:100%;
-
-  max-height:420px;
-
-  object-fit:cover;
-
-  display:block;
-
-  background:var(--tag-bg);
-
-}
+.post-img{width:100%;max-height:420px;object-fit:cover;display:block;background:var(--tag-bg)}
 
 .post-text{
-
-  padding:14px;
-
-  font-size:14px;
-
-  line-height:1.7;
-
-  word-break:break-word;
-
+  padding:12px 14px;font-size:14px;line-height:1.65;
+  word-break:break-word;color:var(--text);
 }
-
-.post-text a{
-
-  color:var(--accent);
-
-  text-decoration:none;
-
+.post-text a{color:var(--accent);text-decoration:none}
+.post-text.clamped{
+  display:-webkit-box;-webkit-line-clamp:5;
+  -webkit-box-orient:vertical;overflow:hidden;
 }
-
-/* TAGS */
-
-.hash-tags{
-
-  display:flex;
-
-  flex-wrap:wrap;
-
-  gap:8px;
-
-  padding:0 14px 14px;
-
+.read-more{
+  padding:0 14px 10px;font-size:13px;
+  color:var(--accent);cursor:pointer;display:block;
 }
-
-.hash-tag{
-
-  background:var(--tag-bg);
-
-  color:var(--text2);
-
-  font-size:11px;
-
-  padding:6px 10px;
-
-  border-radius:999px;
-
-}
-
-/* FOOT */
 
 .post-foot{
-
-  display:flex;
-
-  align-items:center;
-
-  gap:14px;
-
-  padding:12px 14px;
-
-  border-top:
-  1px solid var(--border);
-
+  display:flex;align-items:center;gap:14px;
+  padding:8px 14px 13px;border-top:1px solid var(--border);
 }
+.stat{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text3)}
+.stat svg{width:14px;height:14px;stroke:var(--text3);fill:none;stroke-width:1.8;stroke-linecap:round}
 
-.stat{
-
-  font-size:12px;
-
-  color:var(--text3);
-
-}
-
+/* ── SKELETON ── */
 .copy-btn{
 
   margin-left:auto;
@@ -471,163 +151,224 @@ body{
 
   border-radius:999px;
 
-  padding:8px 14px;
-
-  cursor:pointer;
+  padding:7px 14px;
 
   font-size:12px;
 
-  font-weight:600;
+  cursor:pointer;
 
 }
 
-/* LOADER */
+/* ── HASHTAGS ── */
 
-.loader{
+.hashtags{
 
-  text-align:center;
+  display:flex;
 
-  padding:30px;
+  flex-wrap:wrap;
 
-  color:var(--text3);
+  gap:8px;
 
-  font-size:13px;
+  padding:0 14px 14px;
 
 }
 
-/* TOAST */
+.hashtag{
 
-.toast{
+  background:var(--tag-bg);
 
-  position:fixed;
+  color:var(--text2);
 
-  bottom:20px;
+  font-size:11px;
 
-  left:50%;
-
-  transform:translateX(-50%);
-
-  background:#111;
-
-  color:white;
-
-  padding:10px 16px;
+  padding:5px 10px;
 
   border-radius:999px;
 
-  font-size:13px;
-
-  z-index:99999;
-
 }
 
+.skeleton{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;overflow:hidden;padding:13px 14px;
+  box-shadow:0 2px 12px rgba(0,0,0,.04);
+}
+.sk{background:var(--tag-bg);border-radius:8px;animation:sk 1.4s ease-in-out infinite}
+@keyframes sk{0%,100%{opacity:1}50%{opacity:.35}}
+.sk-row{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+.sk-circle{width:42px;height:42px;border-radius:50%;flex-shrink:0}
+.sk-img{width:100%;height:180px;border-radius:10px;margin-bottom:10px}
+
+/* ── SENTINEL (infinite scroll trigger) ── */
+#sentinel{height:1px}
+
+/* ── SPINNER ── */
+.spinner-wrap{padding:20px;text-align:center;display:none}
+.spinner-wrap.active{display:block}
+.spinner{
+  width:28px;height:28px;border-radius:50%;
+  border:3px solid var(--tag-bg);
+  border-top-color:var(--accent);
+  animation:spin .7s linear infinite;
+  margin:0 auto;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── EMPTY ── */
+.empty{padding:60px 20px;text-align:center;color:var(--text3);font-size:14px}
+
+/* ── NEWEST SORT NOTICE ── */
 </style>
 </head>
-
 <body>
 
 <header class="header">
-
-  <div class="logo">
-
-    TELE<span>POSTS</span>
-
-  </div>
-
+  <div class="logo">TELE<span>POSTS</span></div>
   <div class="search-wrap">
-
-    <svg viewBox="0 0 24 24">
-      <circle cx="11" cy="11" r="8"/>
-      <path d="m21 21-4.35-4.35"/>
-    </svg>
-
-    <input
-    id="search"
-    class="search"
-    type="text"
-    placeholder="Search..."
-    />
-
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="search" class="search" placeholder="Search…" autocomplete="off">
   </div>
-
-  <select
-  id="langSelect"
-  class="lang-select"
-  >
-
-    <option value="all">🌍</option>
-    <option value="arabic" selected>🇸🇦</option>
-    <option value="english">🇺🇸</option>
-    <option value="russian">🇷🇺</option>
-    <option value="turkish">🇹🇷</option>
-    <option value="persian">🇮🇷</option>
-    <option value="other">🔡</option>
-
+  <select id="sortSelect" class="hdr-select">
+    <!-- CHANGE #5 -->
+    <option value="newest" selected>🕒 Newest</option>
+    <option value="views">🔥 Views</option>
+    <option value="az">🔤 A–Z</option>
+    <option value="random">🔀 Random</option>
+    <!-- END CHANGE #5 -->
   </select>
-
+  <select id="langSelect" class="hdr-select">
+    <option value="all">🌍 All</option>
+    <option value="arabic">🇸🇦 AR</option>
+    <option value="english">🇺🇸 EN</option>
+    <option value="russian">🇷🇺 RU</option>
+    <option value="turkish">🇹🇷 TR</option>
+    <option value="persian">🇮🇷 FA</option>
+    <option value="other">🔡 Other</option>
+  </select>
 </header>
 
-<div class="sections">
+<div class="sections-bar">
 
-  <button
-  class="section-btn active"
-  data-section="trending"
-  >
-    🔥 Trending
-  </button>
+<button class="section-btn active" data-sort="newest">
+🕒 Latest
+</button>
 
-  <button
-  class="section-btn"
-  data-section="latest"
-  >
-    🕒 Latest
-  </button>
+<button class="section-btn" data-sort="views">
+🔥 Trending
+</button>
 
-  <button
-  class="section-btn"
-  data-section="growing"
-  >
-    🚀 Growing
-  </button>
+<button class="section-btn" data-sort="growing">
+🚀 Fast Growing
+</button>
 
-  <button
-  class="section-btn"
-  data-section="biggest"
-  >
-    👑 Biggest
-  </button>
+<button class="section-btn" data-sort="biggest">
+👑 Biggest
+</button>
 
-  <button
-  class="section-btn"
-  data-section="gems"
-  >
-    💎 Gems
-  </button>
+<button class="section-btn" data-sort="gems">
+💎 Hidden Gems
+</button>
 
 </div>
 
-<div
-id="feed"
-class="feed"
-></div>
+<div class="tags-bar" id="tagsBar"></div>
 
-<div
-id="loader"
-class="loader"
->
-Loading...
-</div>
+<div class="feed" id="feed"></div>
+<div class="spinner-wrap" id="spinnerWrap"><div class="spinner"></div></div>
+
+<!-- IMPORTANT -->
+<!-- فقط استبدل الجزء ده داخل script -->
+<!-- من أول const WORKER -->
+<!-- لحد boot(); -->
 
 <script>
+function copyPost(username,id){
+
+  const url =
+  `https://t.me/${username}/${id}`;
+
+  navigator.clipboard.writeText(url);
+
+  alert('Copied');
+
+}
+
+function extractTags(text){
+
+  if(!text){
+    return [];
+  }
+
+  const clean =
+  text
+  .replace(/<[^>]*>/g,'')
+  .toLowerCase();
+
+  const map = {
+
+    Tech:[
+      'ai',
+      'python',
+      'android',
+      'coding'
+    ],
+
+    Crypto:[
+      'bitcoin',
+      'crypto',
+      'btc'
+    ],
+
+    Games:[
+      'pubg',
+      'gaming',
+      'ps5'
+    ],
+
+    Movies:[
+      'movie',
+      'film',
+      'netflix'
+    ],
+
+    Sports:[
+      'football',
+      'soccer',
+      'fifa'
+    ]
+
+  };
+
+  const found = [];
+
+  Object.entries(map)
+  .forEach(([tag,words])=>{
+
+    if(
+      words.some(
+        w=>clean.includes(w)
+      )
+    ){
+
+      found.push(tag);
+
+    }
+
+  });
+
+  return found.slice(0,3);
+
+}
 
 const WORKER =
 'https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=';
 
-const BATCH = 12;
+const BATCH = 20;
 
-const CACHE = new Map();
+const CONCURRENT = 12;
 
-const NSFW_WORDS = [
+  const NSFW_WORDS = [
+
+  // english
 
   'porn',
   'xxx',
@@ -635,22 +376,36 @@ const NSFW_WORDS = [
   'nude',
   'onlyfans',
   'nsfw',
+  'escort',
+  'adult',
+  'camgirl',
+  'hentai',
+
+  // arabic
 
   'سكس',
   'نيك',
+  'ممحونة',
+  'ممحون',
   'اباحي',
+  'جنس',
+  'شرموطة',
 
-  'pornhub',
+  // common domains
+
+  'xnxx',
   'xvideos',
-  'xnxx'
+  'pornhub'
 
 ];
 
+const CACHE = new Map();
+
 let allChannels = [];
 
-let filtered = [];
+let pool = [];
 
-let page = 0;
+let poolIndex = 0;
 
 let isLoading = false;
 
@@ -658,9 +413,12 @@ let searchQ = '';
 
 let activeLang = 'arabic';
 
-let activeSection = 'trending';
+let activeSort = 'newest'; // Re-introducing activeSort as it was removed in a previous diff but is needed now.
 
-/* LANGUAGE */
+
+// ─────────────────────────────
+// LANGUAGE
+// ─────────────────────────────
 
 function detectLang(text){
 
@@ -695,336 +453,93 @@ function detectLang(text){
 
 }
 
-/* DATE */
 
-function formatDate(date){
-
-  if(!date) return '';
-
-  const d =
-  new Date(date);
-
-  const diff =
-  (Date.now() - d.getTime()) / 1000;
-
-  if(diff < 60){
-    return 'Just now';
-  }
-
-  if(diff < 3600){
-    return Math.floor(diff/60)+'m ago';
-  }
-
-  if(diff < 86400){
-    return Math.floor(diff/3600)+'h ago';
-  }
-
-  if(diff < 604800){
-    return Math.floor(diff/86400)+'d ago';
-  }
-
-  return d.toLocaleDateString();
-
-}
-
-/* TAGS */
-
-function extractTags(text){
-
-  if(!text) return [];
-
-  const clean =
-  text
-  .replace(/<[^>]*>/g,'')
-  .toLowerCase();
-
-  const map = {
-
-    Tech:[
-      'ai',
-      'python',
-      'android',
-      'coding'
-    ],
-
-    Crypto:[
-      'btc',
-      'bitcoin',
-      'crypto'
-    ],
-
-    Games:[
-      'pubg',
-      'gaming',
-      'ps5'
-    ],
-
-    Movies:[
-      'movie',
-      'film',
-      'netflix'
-    ],
-
-    Sports:[
-      'football',
-      'soccer',
-      'fifa'
-    ],
-
-    News:[
-      'news',
-      'breaking'
-    ]
-
-  };
-
-  const found = [];
-
-  Object.entries(map)
-  .forEach(([tag,words])=>{
-
-    if(
-      words.some(
-        w=>clean.includes(w)
-      )
-    ){
-      found.push(tag);
-    }
-
-  });
-
-  return found.slice(0,3);
-
-}
-
-/* COPY */
-
-function copyPostLink(
-  username,
-  postId
-){
-
-  const url =
-  `https://t.me/${username}/${postId}`;
-
-  navigator
-  .clipboard
-  .writeText(url);
-
-  showToast(
-    'Post copied'
-  );
-
-}
-
-/* TOAST */
-
-function showToast(text){
-
-  const div =
-  document.createElement('div');
-
-  div.className =
-  'toast';
-
-  div.innerText =
-  text;
-
-  document.body.appendChild(div);
-
-  setTimeout(()=>{
-
-    div.remove();
-
-  },2000);
-
-}
-
-/* SEARCH */
+// ─────────────────────────────
+// SEARCH
+// ─────────────────────────────
 
 function matchSearch(ch,q){
 
   if(!q) return true;
 
-  q = q.toLowerCase();
+  const title =
+  (ch.title || '')
+  .toLowerCase();
+
+  const user =
+  (ch.username || '')
+  .toLowerCase();
+
+  const text =
+  (ch.lastText || '')
+  .toLowerCase();
 
   return (
 
-    (ch.title || '')
-    .toLowerCase()
-    .includes(q)
+    title.includes(q)
 
     ||
 
-    (ch.username || '')
-    .toLowerCase()
-    .includes(q)
+    user.includes(q)
+
+    ||
+
+    text.includes(q)
 
   );
 
 }
 
-/* FILTER + SORT */
 
-function buildFeed(){
+// ─────────────────────────────
+// DATE
+// ─────────────────────────────
 
-  let list =
-  allChannels.filter(ch=>
+function formatDate(d){
 
-    ch.username
+  if(!d) return '';
 
-    &&
+  try{
 
-    matchSearch(
-      ch,
-      searchQ
-    )
+    const dt =
+    new Date(d);
 
-  );
+    const now =
+    new Date();
 
-  if(activeSection === 'latest'){
+    const diff =
+    (now-dt)/1000;
 
-    list.sort(
+    if(diff < 60){
+      return 'Just now';
+    }
 
-      (a,b)=>
+    if(diff < 3600){
+      return Math.floor(diff/60)+'m ago';
+    }
 
-      (b.last_post_timestamp || 0)
+    if(diff < 86400){
+      return Math.floor(diff/3600)+'h ago';
+    }
 
-      -
+    if(diff < 604800){
+      return Math.floor(diff/86400)+'d ago';
+    }
 
-      (a.last_post_timestamp || 0)
+    return dt.toLocaleDateString();
 
-    );
+  }catch(e){
 
-  }
-
-  if(activeSection === 'biggest'){
-
-    list.sort(
-
-      (a,b)=>
-
-      (b.subscribers || 0)
-
-      -
-
-      (a.subscribers || 0)
-
-    );
+    return '';
 
   }
-
-  if(activeSection === 'growing'){
-
-    list.sort((a,b)=>{
-
-      const aScore =
-
-        (a.last_post_views || 0)
-
-        /
-
-        Math.max(
-          a.subscribers || 1,
-          1
-        );
-
-      const bScore =
-
-        (b.last_post_views || 0)
-
-        /
-
-        Math.max(
-          b.subscribers || 1,
-          1
-        );
-
-      return bScore - aScore;
-
-    });
-
-  }
-
-  if(activeSection === 'gems'){
-
-    list =
-    list.filter(ch=>
-
-      (ch.subscribers || 0)
-      < 50000
-
-    );
-
-    list.sort((a,b)=>{
-
-      const aScore =
-
-        (a.last_post_views || 0)
-
-        /
-
-        Math.max(
-          a.subscribers || 1,
-          1
-        );
-
-      const bScore =
-
-        (b.last_post_views || 0)
-
-        /
-
-        Math.max(
-          b.subscribers || 1,
-          1
-        );
-
-      return bScore - aScore;
-
-    });
-
-  }
-
-  if(activeSection === 'trending'){
-
-    list.sort((a,b)=>{
-
-      const aScore =
-
-        ((a.last_post_views || 0) * 3)
-
-        +
-
-        ((a.subscribers || 0) * 0.1)
-
-        +
-
-        Math.random()*5000;
-
-      const bScore =
-
-        ((b.last_post_views || 0) * 3)
-
-        +
-
-        ((b.subscribers || 0) * 0.1)
-
-        +
-
-        Math.random()*5000;
-
-      return bScore - aScore;
-
-    });
-
-  }
-
-  filtered = list;
 
 }
 
-/* PARSE */
+
+// ─────────────────────────────
+// PARSE
+// ─────────────────────────────
 
 function parseLastPost(html){
 
@@ -1055,10 +570,8 @@ function parseLastPost(html){
   );
 
   if(textEl){
-
     text =
     textEl.innerHTML.trim();
-
   }
 
   let img = null;
@@ -1081,9 +594,7 @@ function parseLastPost(html){
     );
 
     if(match){
-
       img = match[1];
-
     }
 
   }
@@ -1129,142 +640,38 @@ function parseLastPost(html){
 
 }
 
-/* FETCH */
 
-async function fetchOne(channel){
-
-  if(CACHE.has(channel.username)){
-
-    return CACHE.get(
-      channel.username
-    );
-
-  }
-
-  try{
-
-    const res =
-    await fetch(
-
-      WORKER +
-      channel.username,
-
-      {
-        signal:
-        AbortSignal.timeout(5000)
-      }
-
-    );
-
-    const html =
-    await res.text();
-
-    const post =
-    parseLastPost(html);
-
-    if(
-      !post
-      ||
-      (
-        !post.text
-        &&
-        !post.img
-      )
-    ){
-      return null;
-    }
-
-    const lower = (
-
-      (
-        post.text || ''
-      )
-
-      +
-
-      ' '
-
-      +
-
-      (
-        channel.title || ''
-      )
-
-    ).toLowerCase();
-
-    const blocked =
-    NSFW_WORDS.some(
-      word=>
-      lower.includes(word)
-    );
-
-    if(blocked){
-      return null;
-    }
-
-    const lang =
-    detectLang(
-      post.text || ''
-    );
-
-    if(
-
-      activeLang !== 'all'
-
-      &&
-
-      lang !== activeLang
-
-    ){
-      return null;
-    }
-
-    const result = {
-
-      channel,
-      post
-
-    };
-
-    CACHE.set(
-      channel.username,
-      result
-    );
-
-    return result;
-
-  }catch(e){
-
-    return null;
-
-  }
-
-}
-
-/* CARD */
+// ─────────────────────────────
+// CARD
+// ─────────────────────────────
 
 function makeCard(channel,post){
 
-  const tags =
-  extractTags(
-    post.text
-  );
-
-  const div =
+  const card =
   document.createElement('div');
 
-  div.className =
+  card.className =
   'post-card';
 
-  div.innerHTML = `
+  card.innerHTML = `
 
     <div class="post-head">
 
-      <div class="avatar">
+      <div
+      class="avatar"
+      style="
+      background:
+      linear-gradient(
+      135deg,
+      #0095f6,
+      #7c3aed
+      )
+      "
+      >
 
-        ${(channel.title || channel.username)
-        .slice(0,2)
-        .toUpperCase()}
+      ${(channel.title || channel.username)
+      .slice(0,2)
+      .toUpperCase()}
 
       </div>
 
@@ -1276,7 +683,7 @@ function makeCard(channel,post){
         target="_blank"
         >
 
-          ${channel.title || channel.username}
+        ${channel.title || channel.username}
 
         </a>
 
@@ -1294,7 +701,7 @@ function makeCard(channel,post){
       target="_blank"
       >
 
-        Open
+      Open
 
       </a>
 
@@ -1324,7 +731,7 @@ function makeCard(channel,post){
 
       `<div class="post-text">
 
-        ${post.text}
+      ${post.text}
 
       </div>`
 
@@ -1334,30 +741,21 @@ function makeCard(channel,post){
 
     }
 
-    ${
-      tags.length
-
-      ?
-
-      `<div class="hash-tags">
+    <div class="hashtags">
 
       ${
-        tags.map(tag=>`
+        extractTags(post.text)
+        .map(tag=>
 
-          <div class="hash-tag">
-            #${tag}
-          </div>
+          `<span class="hashtag">
+          #${tag}
+          </span>`
 
-        `).join('')
+        )
+        .join('')
       }
 
-      </div>`
-
-      :
-
-      ''
-
-    }
+    </div>
 
     <div class="post-foot">
 
@@ -1367,18 +765,17 @@ function makeCard(channel,post){
 
       </div>
 
-      <div class="stat">
-
-        👥 ${channel.subscribers || 0}
-
-      </div>
-
       <button
       class="copy-btn"
-      onclick="copyPostLink('${channel.username}','${channel.last_post_id}')"
+      onclick="
+      copyPost(
+        '${channel.username}',
+        '${channel.last_post_id}'
+      )
+      "
       >
 
-        🔗 Copy
+      🔗 Copy
 
       </button>
 
@@ -1386,88 +783,419 @@ function makeCard(channel,post){
 
   `;
 
-  return div;
+  return card;
 
 }
 
-/* LOAD */
 
-async function loadMore(){
+// ─────────────────────────────
+// FETCH
+// ─────────────────────────────
 
-  if(isLoading){
+async function fetchOne(channel){
+
+  if(CACHE.has(channel.username)){
+
+    return CACHE.get(
+      channel.username
+    );
+
+  }
+
+  try{
+
+    const res =
+    await fetch(
+
+      WORKER +
+      channel.username,
+
+      {
+        signal:
+        AbortSignal.timeout(4000)
+      }
+
+    );
+
+    const html =
+    await res.text();
+
+    const post =
+    parseLastPost(html);
+
+const lower = (
+
+  (
+    post?.text || ''
+  )
+
+  +
+
+  ' '
+
+  +
+
+  (
+    channel.title || ''
+  )
+
+).toLowerCase();
+
+const blocked =
+NSFW_WORDS.some(
+word =>
+lower.includes(word)
+);
+
+if(blocked){
+
+  return null;
+
+}
+    
+
+    if(
+      !post
+      ||
+      (
+        !post.text
+        &&
+        !post.img
+      )
+    ){
+
+      return null;
+
+    }
+
+    const lang =
+    detectLang(
+      post.text || ''
+    );
+
+    if(
+
+      activeLang !== 'all'
+
+      &&
+
+      lang !== activeLang
+
+    ){
+
+      return null;
+
+    }
+
+    channel.lastText =
+    (post.text || '')
+    .replace(/<[^>]*>/g,'');
+
+    channel.lastViews =
+    parseInt(
+
+      (post.views || '0')
+      .replace(/[^\d]/g,'')
+
+    ) || 0;
+
+    const result = {
+
+      channel,
+      post
+
+    };
+
+    CACHE.set(
+      channel.username,
+      result
+    );
+
+    return result;
+
+  }catch(e){
+
+    return null;
+
+  }
+
+}
+
+
+// ─────────────────────────────
+// LOAD
+// ─────────────────────────────
+
+async function loadBatch(){
+
+  if(
+    isLoading
+    ||
+    poolIndex >= pool.length
+  ){
     return;
   }
 
   isLoading = true;
 
-  const start =
-  page * BATCH;
-
-  const end =
-  start + BATCH;
-
   const slice =
-  filtered.slice(start,end);
-
-  page++;
-
-  const results =
-  await Promise.allSettled(
-
-    slice.map(
-      ch=>fetchOne(ch)
-    )
-
+  pool.slice(
+    poolIndex,
+    poolIndex + BATCH
   );
 
-  results.forEach(r=>{
+  poolIndex += BATCH;
 
-    if(
+  const fragment =
+  document.createDocumentFragment();
 
-      r.status === 'fulfilled'
+  for(
 
-      &&
+    let i = 0;
 
-      r.value
+    i < slice.length;
 
-    ){
+    i += CONCURRENT
 
-      document
-      .getElementById('feed')
-      .appendChild(
+  ){
 
-        makeCard(
-          r.value.channel,
-          r.value.post
-        )
+    const group =
+    slice.slice(
+      i,
+      i + CONCURRENT
+    );
 
-      );
+    const results =
+    await Promise.allSettled(
 
-    }
+      group.map(
+        ch => fetchOne(ch)
+      )
 
-  });
+    );
+
+    results.forEach(r => {
+
+      if(
+
+        r.status === 'fulfilled'
+
+        &&
+
+        r.value
+
+      ){
+
+        fragment.appendChild(
+
+          makeCard(
+            r.value.channel,
+            r.value.post
+          )
+
+        );
+
+      }
+
+    });
+
+  }
+
+  document
+  .getElementById('feed')
+  .appendChild(fragment);
 
   isLoading = false;
 
 }
 
-/* INIT */
 
-function refreshFeed(){
+// ─────────────────────────────
+// SORT
+// ─────────────────────────────
 
-  page = 0;
+function buildPool(){
+
+  let list =
+  allChannels.filter(ch =>
+
+    ch.username
+
+    &&
+
+    matchSearch(
+      ch,
+      searchQ
+    )
+
+  );
+
+if(activeSort === 'newest'){
+
+  list.sort((a,b)=>{
+
+    const aScore =
+
+      (a.last_post_timestamp || 0)
+
+      +
+
+      Math.random() * 86400000;
+
+    const bScore =
+
+      (b.last_post_timestamp || 0)
+
+      +
+
+      Math.random() * 86400000;
+
+    return bScore - aScore;
+
+  });
+
+}
+  
+
+  if(activeSort === 'az'){
+
+    list.sort(
+
+      (a,b)=>
+
+      (a.title || a.username)
+      .localeCompare(
+        b.title || b.username
+      )
+
+    );
+
+}
+
+if(activeSort === 'biggest'){
+
+  list.sort(
+
+    (a,b)=>
+
+    (b.subscribers || 0)
+
+    -
+
+    (a.subscribers || 0)
+
+  );
+
+}
+
+if(activeSort === 'growing'){
+
+  list.sort((a,b)=>{
+
+    const aRate =
+
+      (a.last_post_views || 0)
+
+      /
+
+      Math.max(
+        a.subscribers || 1,
+        1
+      );
+
+    const bRate =
+
+      (b.last_post_views || 0)
+
+      /
+
+      Math.max(
+        b.subscribers || 1,
+        1
+      );
+
+    return bRate - aRate;
+
+  });
+
+}
+
+if(activeSort === 'gems'){
+
+  list = list.filter(
+
+    ch=>
+
+    (ch.subscribers || 0)
+    < 50000
+
+  );
+
+  }
+
+  if(activeSort === 'random'){
+
+    list =
+    list.sort(
+      ()=>Math.random()-.5
+    );
+
+  }
+
+  if(activeSort === 'views'){
+
+    list.sort(
+
+      (a,b)=>
+
+      (b.lastViews || 0)
+
+      -
+
+      (a.lastViews || 0)
+
+    );
+
+  }
+
+  pool = list;
+
+}
+
+
+// ─────────────────────────────
+// INIT
+// ─────────────────────────────
+
+function initFeed(){
+
+  poolIndex = 0;
 
   document
   .getElementById('feed')
   .innerHTML = '';
 
-  buildFeed();
-
-  loadMore();
+  loadBatch();
 
 }
 
-/* EVENTS */
+
+// ─────────────────────────────
+// APPLY
+// ─────────────────────────────
+
+function applyFilters(){
+
+  buildPool();
+
+  initFeed();
+
+}
+
+
+// ─────────────────────────────
+// EVENTS
+// ─────────────────────────────
 
 document
 .getElementById('search')
@@ -1478,18 +1206,18 @@ document
   .toLowerCase()
   .trim();
 
-  refreshFeed();
+  applyFilters();
 
 });
 
 document
-.getElementById('langSelect')
+.getElementById('sortSelect')
 .addEventListener('change',e=>{
 
-  activeLang =
+  activeSort =
   e.target.value;
 
-  refreshFeed();
+  applyFilters();
 
 });
 
@@ -1501,22 +1229,36 @@ document
 
     document
     .querySelectorAll('.section-btn')
-    .forEach(b=>
-      b.classList.remove('active')
+    .forEach(
+      b=>b.classList.remove('active')
     );
 
     btn.classList.add('active');
 
-    activeSection =
-    btn.dataset.section;
+    activeSort =
+    btn.dataset.sort;
 
-    refreshFeed();
+    applyFilters();
 
   });
 
 });
 
-/* SCROLL */
+document
+.getElementById('langSelect')
+.addEventListener('change',e=>{
+
+  activeLang =
+  e.target.value;
+
+  applyFilters();
+
+});
+
+
+// ─────────────────────────────
+// SCROLL
+// ─────────────────────────────
 
 window.addEventListener('scroll',()=>{
 
@@ -1529,17 +1271,20 @@ window.addEventListener('scroll',()=>{
     >=
 
     document.body.offsetHeight
-    - 1500
+    - 1800
 
   ){
 
-    loadMore();
+    loadBatch();
 
   }
 
 });
 
-/* BOOT */
+
+// ─────────────────────────────
+// BOOT
+// ─────────────────────────────
 
 async function boot(){
 
@@ -1564,13 +1309,23 @@ async function boot(){
 
   }
 
-  refreshFeed();
+  document
+  .getElementById('langSelect')
+  .value = 'arabic';
+
+  document
+  .getElementById('sortSelect')
+  .value = 'newest';
+
+  applyFilters();
 
 }
 
 boot();
 
-</script>
+</script>    
+    
 
+  
 </body>
 </html>
