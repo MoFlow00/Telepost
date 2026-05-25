@@ -10,7 +10,7 @@
 :root{
   --bg:#f5f7fb;--surface:#fff;--border:#e5e9f0;
   --text:#111;--text2:#555;--text3:#9ca3af;
-  --accent:#0095f6;--tag-bg:#eef2f7;--success:#22c55e;
+  --accent:#0095f6;--tag-bg:#eef2f7;--success:#22c55e;--error:#ef4444;
 }
 @media(prefers-color-scheme:dark){
   :root{
@@ -18,7 +18,7 @@
     --text:#f0f0f0;--text2:#aaa;--text3:#666;--tag-bg:#1e1e1e;
   }
 }
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 .header{
   position:sticky;top:0;z-index:999;
   background:rgba(255,255,255,.9);backdrop-filter:blur(18px);
@@ -26,15 +26,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
   display:flex;gap:10px;align-items:center;flex-wrap:wrap;
 }
 @media(prefers-color-scheme:dark){.header{background:rgba(20,20,20,.9)}}
-.logo{font-size:18px;font-weight:700;flex-shrink:0}
+.logo{font-size:18px;font-weight:700;flex-shrink:0;cursor:pointer}
 .logo span{color:var(--accent)}
 .search{
   flex:1;min-width:120px;padding:10px 14px;border:none;
   border-radius:18px;background:var(--tag-bg);color:var(--text);outline:none;
+  transition:box-shadow .2s;
 }
+.search:focus{box-shadow:0 0 0 3px rgba(0,149,246,.2)}
 .select{
   padding:10px 12px;border:none;border-radius:18px;
-  background:var(--tag-bg);color:var(--text);outline:none;
+  background:var(--tag-bg);color:var(--text);outline:none;cursor:pointer;
 }
 .feed{
   max-width:680px;margin:auto;padding:16px 12px 70px;
@@ -45,7 +47,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
   border-radius:22px;overflow:hidden;
   box-shadow:0 4px 18px rgba(0,0,0,.07);
   transition:transform .2s,box-shadow .2s;
+  animation:fadeIn .3s ease;
 }
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .post-card:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,.12)}
 .post-head{display:flex;align-items:center;gap:12px;padding:14px}
 .avatar{
@@ -58,13 +62,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
 .post-channel{
   font-size:14px;font-weight:700;color:var(--text);
   text-decoration:none;display:block;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis;
+  overflow:hidden;text-overflow:ellipsis;max-width:200px;
 }
 .post-date{margin-top:2px;font-size:11px;color:var(--text3)}
 .open-btn{
   padding:8px 14px;border-radius:20px;background:var(--accent);
   color:white;text-decoration:none;font-size:12px;font-weight:700;flex-shrink:0;
+  transition:opacity .2s;
 }
+.open-btn:hover{opacity:.9}
 .post-img{width:100%;max-height:500px;object-fit:cover;display:block;background:#0001}
 .post-text{padding:14px;font-size:14px;line-height:1.7;word-break:break-word;color:var(--text2)}
 .post-text a{color:var(--accent);text-decoration:none}
@@ -76,8 +82,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
 .trending-badge{
   background:linear-gradient(135deg,#ff6b6b,#ee5a24);
   color:white;padding:2px 8px;border-radius:10px;
-  font-size:10px;font-weight:700;margin-left:6px;
+  font-size:10px;font-weight:700;margin-left:6px;animation:pulse 2s infinite;
 }
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
 .copy-btn{
   margin-left:auto;border:none;background:var(--tag-bg);
   color:var(--text);padding:7px 12px;border-radius:18px;
@@ -96,20 +103,26 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
 .empty-state{
   text-align:center;padding:40px 20px;color:var(--text3);
 }
+.status-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--surface);border-top:1px solid var(--border);
+  padding:8px 16px;font-size:11px;color:var(--text3);
+  display:flex;justify-content:space-between;align-items:center;
+  z-index:1000;
+}
 @media(max-width:768px){
   .header{flex-wrap:wrap}
   .search{width:100%;order:3}
   .select{flex:1;min-width:100px}
+  .post-channel{max-width:150px}
 }
 </style>
 </head>
 <body>
 
 <header class="header">
-  <div class="logo">TELE<span>POSTS</span></div>
-  
+  <div class="logo" id="logo">TELE<span>POSTS</span></div>
   <input id="search" class="search" placeholder="🔍 Search channels...">
-  
   <select id="sortSelect" class="select">
     <option value="trending">🔥 Trending</option>
     <option value="newest">🕒 Newest</option>
@@ -118,7 +131,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
     <option value="hiddengems">💎 Hidden Gems</option>
     <option value="az">🔤 A-Z</option>
   </select>
-  
   <select id="langSelect" class="select">
     <option value="arabic">🇸🇦 AR</option>
     <option value="english">🇺🇸 EN</option>
@@ -132,37 +144,42 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
 
 <div id="feed" class="feed"></div>
 <div class="spinner-wrap" id="spinnerWrap"><div class="spinner"></div></div>
-<div id="emptyState" class="empty-state" style="display:none">No posts found 😕</div>
+<div id="emptyState" class="empty-state" style="display:none">No posts found 😕<br><small style="color:var(--text3)">Try changing filters or search</small></div>
+
+<div class="status-bar" id="statusBar" style="display:none">
+  <span id="statusText">Ready</span>
+  <span id="cacheStats">Cache: 0</span>
+</div>
 
 <script>
 /**
- * ⚙️ CONFIGURATION - اضبط القيم هنا للتحكم في الأداء والحدود
+ * ⚙️ CONFIGURATION - Optimized for SPEED + Cloudflare Safety
  */
 const CONFIG = {
   WORKER_URL: 'https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=',
   
-  // 🚦 Cloudflare Rate Limiting Settings
-  BATCH_SIZE: 6,              // عدد القنوات لكل دفعة (قلل لتجنب الحظر)
-  CONCURRENT_REQUESTS: 3,     // طلبات متزامنة كحد أقصى
-  REQUEST_DELAY: 800,         // تأخير بين الدفعات (مللي ثانية)
-  RETRY_ATTEMPTS: 2,          // محاولات إعادة عند الفشل
-  RETRY_DELAY: 1500,          // تأخير قبل إعادة المحاولة
+  // 🚀 SPEED SETTINGS
+  BATCH_SIZE: 10,              // ↑ More items per batch
+  CONCURRENT_REQUESTS: 6,      // ↑ More parallel requests
+  REQUEST_DELAY: 250,          // ↓ Less delay between batches (was 800)
+  RETRY_ATTEMPTS: 1,           // ↓ Faster failure handling
+  RETRY_DELAY: 500,            // ↓ Less retry delay
+  FETCH_TIMEOUT: 4000,         // ↓ Faster timeout (was 5000)
   
-  // 🧠 Cache Settings
-  CACHE_TTL: 15 * 60 * 1000,  // عمر الكاش: 15 دقيقة
+  // 💾 CACHE SETTINGS
+  CACHE_TTL: 45 * 60 * 1000,   // ↑ 45 minutes persistent cache
+  MAX_LOCAL_CACHE: 150,        // Max items in localStorage
   
-  // 📊 Trending Algorithm Weights
+  // 📊 TRENDING ALGORITHM
   TRENDING_WEIGHTS: {
-    views: 0.35,              // وزن عدد المشاهدات
-    engagement: 0.40,         // وزن التفاعل (مشاهدات/مشتركين)
-    freshness: 0.20,          // وزن حداثة النشر
-    velocity: 0.05            // وزن سرعة النمو
+    views: 0.35,
+    engagement: 0.40,
+    freshness: 0.20,
+    velocity: 0.05
   },
+  TRENDING_MAX_AGE_HOURS: 72,
   
-  // 🕐 وقت صلاحية المنشور للتريند (بالساعات)
-  TRENDING_MAX_AGE_HOURS: 72, // 3 أيام فقط
-  
-  // 🔞 كلمات الفلترة
+  // 🔞 FILTERS
   NSFW_WORDS: [
     'porn','xxx','sex','nude','onlyfans','hentai',
     'سكس','نيك','اباحي','شرموطة','عري'
@@ -170,49 +187,122 @@ const CONFIG = {
 };
 
 /**
- * 🗄️ Smart Cache with TTL
+ * 🗄️ SmartCache - In-memory with TTL
  */
 class SmartCache {
   constructor(ttl = CONFIG.CACHE_TTL) {
     this.cache = new Map();
     this.ttl = ttl;
+    this.hits = 0;
+    this.misses = 0;
   }
   
   set(key, value) {
-    this.cache.set(key, {
-      value,
-      timestamp: Date.now()
-    });
+    this.cache.set(key, { value, timestamp: Date.now() });
   }
   
   get(key) {
     const item = this.cache.get(key);
-    if (!item) return null;
+    if (!item) { this.misses++; return null; }
     
-    // تحقق من انتهاء الصلاحية
     if (Date.now() - item.timestamp > this.ttl) {
       this.cache.delete(key);
+      this.misses++;
       return null;
     }
+    this.hits++;
     return item.value;
   }
   
-  clear() {
-    this.cache.clear();
-  }
+  clear() { this.cache.clear(); }
   
   cleanup() {
-    // تنظيف العناصر منتهية الصلاحية
     for (const [key, item] of this.cache) {
       if (Date.now() - item.timestamp > this.ttl) {
         this.cache.delete(key);
       }
     }
   }
+  
+  getStats() {
+    const total = this.hits + this.misses;
+    return {
+      size: this.cache.size,
+      hitRate: total > 0 ? Math.round((this.hits/total)*100) : 0
+    };
+  }
 }
 
 /**
- * 🚦 Rate Limiter Queue - للتحكم في تدفق الطلبات
+ * 💾 LocalStorage Cache - Persistent across sessions
+ */
+const StorageCache = {
+  prefix: 'tp_',
+  
+  key(username) { return this.prefix + username; },
+  
+  get(username) {
+    try {
+      const item = localStorage.getItem(this.key(username));
+      if (!item) return null;
+      const parsed = JSON.parse(item);
+      if (Date.now() - parsed.timestamp > CONFIG.CACHE_TTL) {
+        localStorage.removeItem(this.key(username));
+        return null;
+      }
+      return parsed.data;
+    } catch { return null; }
+  },
+  
+  set(username, data) {
+    try {
+      this._enforceLimit();
+      localStorage.setItem(this.key(username), JSON.stringify({
+        data, timestamp: Date.now()
+      }));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError') {
+        this._cleanupOldest(30);
+        try {
+          localStorage.setItem(this.key(username), JSON.stringify({
+            data, timestamp: Date.now()
+          }));
+        } catch {}
+      }
+    }
+  },
+  
+  _enforceLimit() {
+    const keys = Object.keys(localStorage).filter(k => k.startsWith(this.prefix));
+    if (keys.length >= CONFIG.MAX_LOCAL_CACHE) {
+      this._cleanupOldest(keys.length - CONFIG.MAX_LOCAL_CACHE + 10);
+    }
+  },
+  
+  _cleanupOldest(count) {
+    const items = Object.keys(localStorage)
+      .filter(k => k.startsWith(this.prefix))
+      .map(k => ({ key: k, time: JSON.parse(localStorage[k]).timestamp }))
+      .sort((a, b) => a.time - b.time);
+    
+    for (let i = 0; i < count && i < items.length; i++) {
+      localStorage.removeItem(items[i].key);
+    }
+  },
+  
+  clear() {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith(this.prefix))
+      .forEach(k => localStorage.removeItem(k));
+  },
+  
+  getCount() {
+    return Object.keys(localStorage).filter(k => k.startsWith(this.prefix)).length;
+  }
+};
+
+/**
+ * 🚦 Rate Limiter Queue - Smart request throttling
  */
 class RequestQueue {
   constructor(config) {
@@ -220,58 +310,60 @@ class RequestQueue {
     this.processing = false;
     this.config = config;
     this.lastRequestTime = 0;
+    this.activeRequests = 0;
   }
   
-  async add(task) {
+  async add(task, priority = 0) {
     return new Promise((resolve, reject) => {
-      this.queue.push({ task, resolve, reject });
+      this.queue.push({ task, resolve, reject, priority, added: Date.now() });
+      this.queue.sort((a, b) => b.priority - a.priority);
       this.process();
     });
   }
   
   async process() {
     if (this.processing || this.queue.length === 0) return;
-    
     this.processing = true;
     
-    while (this.queue.length > 0) {
-      // احترام التأخير بين الطلبات
+    while (this.queue.length > 0 && this.activeRequests < CONFIG.CONCURRENT_REQUESTS) {
       const now = Date.now();
-      const timeSinceLast = now - this.lastRequestTime;
+      const elapsed = now - this.lastRequestTime;
       
-      if (timeSinceLast < CONFIG.REQUEST_DELAY) {
-        await this.sleep(CONFIG.REQUEST_DELAY - timeSinceLast);
+      if (elapsed < CONFIG.REQUEST_DELAY) {
+        await this._sleep(CONFIG.REQUEST_DELAY - elapsed);
       }
       
       const { task, resolve, reject } = this.queue.shift();
+      this.activeRequests++;
       
-      try {
-        const result = await this.executeWithRetry(task);
-        resolve(result);
-      } catch (error) {
-        reject(error);
-      }
-      
-      this.lastRequestTime = Date.now();
+      this._executeWithRetry(task)
+        .then(resolve)
+        .catch(reject)
+        .finally(() => {
+          this.activeRequests--;
+          this.lastRequestTime = Date.now();
+          setTimeout(() => this.process(), 50);
+        });
     }
-    
     this.processing = false;
   }
   
-  async executeWithRetry(task, attempts = 0) {
+  async _executeWithRetry(task, attempts = 0) {
     try {
       return await task();
     } catch (error) {
-      if (attempts < CONFIG.RETRY_ATTEMPTS) {
-        await this.sleep(CONFIG.RETRY_DELAY * (attempts + 1));
-        return this.executeWithRetry(task, attempts + 1);
+      if (attempts < CONFIG.RETRY_ATTEMPTS && error.name !== 'AbortError') {
+        await this._sleep(CONFIG.RETRY_DELAY * (attempts + 1));
+        return this._executeWithRetry(task, attempts + 1);
       }
       throw error;
     }
   }
   
-  sleep(ms) {
-    return new Promise(res => setTimeout(res, ms));
+  _sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
+  
+  getStats() {
+    return { queued: this.queue.length, active: this.activeRequests };
   }
 }
 
@@ -290,88 +382,63 @@ const state = {
   currentIndex: 0,
   isLoading: false,
   hasMore: true,
-  
-  filters: {
-    sort: 'trending',
-    lang: 'arabic',
-    search: ''
-  }
+  initialized: false,
+  filters: { sort: 'trending', lang: 'arabic', search: '' }
 };
 
 /**
- * 🔍 Language Detection - محسّن
+ * 🔍 Language Detection
  */
 function detectLanguage(text) {
   if (!text) return 'other';
   const clean = text.replace(/<[^>]*>/g, '').toLowerCase();
-  
-  // Arabic & Persian
-  if (/[\u0600-\u06FF]/.test(clean)) {
-    return /[پگچژکی]/.test(clean) ? 'persian' : 'arabic';
-  }
-  // Russian
+  if (/[\u0600-\u06FF]/.test(clean)) return /[پگچژکی]/.test(clean) ? 'persian' : 'arabic';
   if (/[А-Яа-яЁё]/.test(clean)) return 'russian';
-  // Turkish
   if (/[şğıüçöİĞŞ]/i.test(clean)) return 'turkish';
-  // English
   if (/[a-zA-Z]/.test(clean)) return 'english';
-  
   return 'other';
 }
 
 /**
- * 👁️ Parse Views - تحويل النصوص لأرقام
+ * 👁️ Parse Views
  */
 function parseViews(value) {
   if (!value) return 0;
   const str = String(value).replace(/,/g, '').trim();
-  
   if (/K$/i.test(str)) return Math.round(parseFloat(str) * 1000);
   if (/M$/i.test(str)) return Math.round(parseFloat(str) * 1000000);
-  
   return parseInt(str.replace(/[^\d]/g, '')) || 0;
 }
 
 /**
- * 🕐 Format Date - عرض الوقت بشكل ذكي
+ * 🕐 Format Relative Time
  */
 function formatRelativeTime(dateString) {
   if (!dateString) return '';
-  
   try {
     const date = new Date(dateString);
     const now = new Date();
     const seconds = Math.floor((now - date) / 1000);
-    
     if (seconds < 60) return 'Just now';
     if (seconds < 3600) return `${Math.floor(seconds/60)}m ago`;
     if (seconds < 86400) return `${Math.floor(seconds/3600)}h ago`;
     if (seconds < 604800) return `${Math.floor(seconds/86400)}d ago`;
-    
-    return date.toLocaleDateString(undefined, { 
-      month: 'short', day: 'numeric' 
-    });
-  } catch {
-    return '';
-  }
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  } catch { return ''; }
 }
 
 /**
- * 📰 Parse Telegram Post - استخراج البيانات من HTML
+ * 📰 Parse Telegram Post
  */
 function parseLastPost(html) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const messages = doc.querySelectorAll('.tgme_widget_message_wrap');
-  
   if (!messages.length) return null;
   
   const last = messages[messages.length - 1];
-  
-  // Extract text
   const textEl = last.querySelector('.tgme_widget_message_text');
   const text = textEl?.innerHTML.trim() || '';
   
-  // Extract image
   let image = null;
   const photoWrap = last.querySelector('.tgme_widget_message_photo_wrap');
   if (photoWrap) {
@@ -380,14 +447,12 @@ function parseLastPost(html) {
     if (match) image = match[1];
   }
   
-  // Extract date & views
   const dateEl = last.querySelector('.tgme_widget_message_date time');
   const viewEl = last.querySelector('.tgme_widget_message_views');
   const postEl = last.querySelector('[data-post]');
   
   return {
-    text,
-    image,
+    text, image,
     date: dateEl?.getAttribute('datetime') || '',
     views: viewEl?.textContent.trim() || '',
     postId: postEl?.getAttribute('data-post') || ''
@@ -395,39 +460,24 @@ function parseLastPost(html) {
 }
 
 /**
- * 🔥 Trending Score Algorithm - الخوارزمية المحسّنة
- * 
- * المعادلة: 
- * Score = (Views × W1) + (Engagement × W2) + (Freshness × W3) + (Velocity × W4)
+ * 🔥 Trending Score Algorithm (Optimized)
  */
 function calculateTrendingScore(channel) {
   const { views = 0, subscribers = 1, last_post_timestamp = 0 } = channel;
-  
-  // 1. حساب العمر بالساعات
   const ageHours = (Date.now()/1000 - last_post_timestamp) / 3600;
   
-  // استبعاد المنشورات القديمة جداً
   if (ageHours > CONFIG.TRENDING_MAX_AGE_HOURS) return 0;
   
-  // 2. عامل الحداثة (أحدث = أعلى درجة) - منحنى أسي
-  const freshness = Math.exp(-ageHours / 24); // نصف العمر: 24 ساعة
-  
-  // 3. معدل التفاعل (مشاهدات لكل مشترك)
+  const freshness = Math.exp(-ageHours / 24);
   const engagement = subscribers > 0 ? views / subscribers : 0;
-  
-  // 4. سرعة النمو (تقريبي: مشاهدات/ساعة)
   const velocity = ageHours > 0 ? views / ageHours : views;
   
-  // 5. حساب الدرجة النهائية بالأوزان
   const { views: w1, engagement: w2, freshness: w3, velocity: w4 } = CONFIG.TRENDING_WEIGHTS;
   
-  const score = 
-    (Math.log10(views + 1) * 100 * w1) +      // لوغاريتمي لتجنب هيمنة الأرقام الكبيرة
-    (engagement * 10000 * w2) +                 // تفاعل عالي = تريند
-    (freshness * 5000 * w3) +                   // حداثة مهمة
-    (Math.log10(velocity + 1) * 500 * w4);      // نمو سريع
-  
-  return score;
+  return (Math.log10(views + 1) * 100 * w1) +
+         (engagement * 10000 * w2) +
+         (freshness * 5000 * w3) +
+         (Math.log10(velocity + 1) * 500 * w4);
 }
 
 /**
@@ -437,25 +487,18 @@ function buildPool() {
   const { sort, lang, search } = state.filters;
   const query = search.toLowerCase();
   
-  // 1. فلترة البحث
   let pool = state.allChannels.filter(ch => {
     if (!ch.username) return false;
     if (!query) return true;
-    
     const title = (ch.title || '').toLowerCase();
     const username = (ch.username || '').toLowerCase();
     return title.includes(query) || username.includes(query);
   });
   
-  // 2. فلترة اللغة (لا تطبق على Trending للحفاظ على التنوع)
   if (lang !== 'all' && sort !== 'trending') {
-    pool = pool.filter(ch => {
-      if (!ch.detectedLang) return true;
-      return ch.detectedLang === lang;
-    });
+    pool = pool.filter(ch => !ch.detectedLang || ch.detectedLang === lang);
   }
   
-  // 3. الفرز حسب النوع المختار
   switch (sort) {
     case 'trending':
       pool = pool
@@ -465,41 +508,32 @@ function buildPool() {
         })
         .sort((a, b) => calculateTrendingScore(b) - calculateTrendingScore(a));
       break;
-      
     case 'newest':
       pool.sort((a, b) => (b.last_post_timestamp||0) - (a.last_post_timestamp||0));
       break;
-      
     case 'biggest':
       pool.sort((a, b) => (b.subscribers||0) - (a.subscribers||0));
       break;
-      
     case 'fastgrowing':
       pool.sort((a, b) => {
-        const rateA = (a.last_post_views||0) / Math.max(a.subscribers||1, 1);
-        const rateB = (b.last_post_views||0) / Math.max(b.subscribers||1, 1);
-        return rateB - rateA;
+        const rA = (a.last_post_views||0) / Math.max(a.subscribers||1, 1);
+        const rB = (b.last_post_views||0) / Math.max(b.subscribers||1, 1);
+        return rB - rA;
       });
       break;
-      
     case 'hiddengems':
       pool.sort((a, b) => {
         const score = (ch) => {
           const subs = ch.subscribers || 1;
-          if (subs >= 50000) return 0; // استبعاد القنوات الكبيرة
-          return (ch.last_post_views||0) / Math.log(subs + 2);
+          return subs >= 50000 ? 0 : (ch.last_post_views||0) / Math.log(subs + 2);
         };
         return score(b) - score(a);
       });
       break;
-      
     case 'az':
-      pool.sort((a, b) => 
-        (a.title || a.username).localeCompare(b.title || b.username)
-      );
+      pool.sort((a, b) => (a.title || a.username).localeCompare(b.title || b.username));
       break;
   }
-  
   return pool;
 }
 
@@ -512,22 +546,30 @@ function isSafeContent(channel, post) {
 }
 
 /**
- * 🌐 Fetch Channel Data - مع الحماية من Cloudflare
+ * 🌐 Fetch Channel Data - Optimized with dual cache
  */
 async function fetchChannelData(channel) {
+  // 1. Check SmartCache (RAM)
   const cached = cache.get(channel.username);
   if (cached) return cached;
   
+  // 2. Check LocalStorage (Persistent)
+  const stored = StorageCache.get(channel.username);
+  if (stored) {
+    cache.set(channel.username, stored);
+    return stored;
+  }
+  
   const fetchTask = async () => {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
     
     try {
       const response = await fetch(CONFIG.WORKER_URL + channel.username, {
         signal: controller.signal,
-        headers: { 'Accept': 'text/html' }
+        headers: { 'Accept': 'text/html' },
+        cache: 'no-store'
       });
-      
       clearTimeout(timeout);
       
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -538,33 +580,33 @@ async function fetchChannelData(channel) {
       if (!post || (!post.text && !post.image)) return null;
       if (!isSafeContent(channel, post)) return null;
       
-      // تحديث بيانات القناة
       channel.detectedLang = detectLanguage(post.text);
       channel.last_post_views = parseViews(post.views);
       
       const result = { channel, post };
       cache.set(channel.username, result);
+      StorageCache.set(channel.username, result);
       
       return result;
-      
     } catch (error) {
       clearTimeout(timeout);
-      console.warn(`Failed to fetch ${channel.username}:`, error.message);
+      if (error.name !== 'AbortError') {
+        console.warn(`⚠️ ${channel.username}: ${error.message}`);
+      }
       return null;
     }
   };
   
-  return requestQueue.add(fetchTask);
+  // Priority: trending channels get higher priority
+  const priority = state.filters.sort === 'trending' ? calculateTrendingScore(channel) : 0;
+  return requestQueue.add(fetchTask, priority);
 }
 
 /**
- * 🎴 Create Post Card Element
+ * 🎴 Create Post Card
  */
 function createCard(channel, post, trendingRank) {
-  const postUrl = post.postId 
-    ? `https://t.me/${post.postId}` 
-    : `https://t.me/${channel.username}`;
-    
+  const postUrl = post.postId ? `https://t.me/${post.postId}` : `https://t.me/${channel.username}`;
   const card = document.createElement('div');
   card.className = 'post-card';
   
@@ -583,64 +625,65 @@ function createCard(channel, post, trendingRank) {
       </div>
       <a class="open-btn" href="${postUrl}" target="_blank">Open</a>
     </div>
-    
     ${post.image ? `<img class="post-img" src="${post.image}" loading="lazy" alt="Post">` : ''}
-    
     ${post.text ? `<div class="post-text">${post.text}</div>` : ''}
-    
     <div class="post-foot">
       <span class="stat">👁️ ${post.views || '–'}</span>
       <button class="copy-btn" data-url="${postUrl}">Copy</button>
     </div>
   `;
   
-  // Copy button handler
-  const copyBtn = card.querySelector('.copy-btn');
-  copyBtn.addEventListener('click', (e) => {
+  card.querySelector('.copy-btn').addEventListener('click', (e) => {
     e.preventDefault();
-    navigator.clipboard.writeText(copyBtn.dataset.url);
-    
-    copyBtn.textContent = 'Copied!';
-    copyBtn.classList.add('copied');
-    
-    setTimeout(() => {
-      copyBtn.textContent = 'Copy';
-      copyBtn.classList.remove('copied');
-    }, 1500);
+    const btn = e.currentTarget;
+    navigator.clipboard.writeText(btn.dataset.url);
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
   });
   
   return card;
 }
 
 /**
- * 📦 Load Batch of Posts
+ * 📦 Load Batch - With priority & speed optimizations
  */
-async function loadBatch() {
+async function loadBatch(isFirstBatch = false) {
   if (state.isLoading || !state.hasMore) return;
   
   state.isLoading = true;
-  document.getElementById('spinnerWrap').classList.add('active');
+  const spinner = document.getElementById('spinnerWrap');
+  if (!isFirstBatch) spinner.classList.add('active');
   
   const { filteredPool } = state;
   const startIndex = state.currentIndex;
-  const endIndex = Math.min(startIndex + CONFIG.BATCH_SIZE, filteredPool.length);
+  
+  // 🚀 First batch: load more items faster
+  const batchSize = isFirstBatch 
+    ? Math.min(Math.floor(CONFIG.BATCH_SIZE * 1.5), 15) 
+    : CONFIG.BATCH_SIZE;
+    
+  const endIndex = Math.min(startIndex + batchSize, filteredPool.length);
   
   if (startIndex >= filteredPool.length) {
     state.hasMore = false;
-    document.getElementById('spinnerWrap').classList.remove('active');
+    spinner.classList.remove('active');
     state.isLoading = false;
     return;
   }
   
-  const batch = filteredPool.slice(startIndex, endIndex);
+  let batch = filteredPool.slice(startIndex, endIndex);
+  
+  // 🎯 Priority sort for trending
+  if (state.filters.sort === 'trending') {
+    batch = batch.sort((a, b) => calculateTrendingScore(b) - calculateTrendingScore(a));
+  }
+  
   state.currentIndex = endIndex;
   
-  // تحميل متوازي مع احترام الحدود
-  const results = await Promise.allSettled(
-    batch.map(ch => fetchChannelData(ch))
-  );
+  // 🚀 Parallel fetch with rate limiting
+  const results = await Promise.allSettled(batch.map(ch => fetchChannelData(ch)));
   
-  // عرض النتائج
   const fragment = document.createDocumentFragment();
   let added = 0;
   
@@ -648,7 +691,6 @@ async function loadBatch() {
     if (result.status === 'fulfilled' && result.value) {
       const { channel, post } = result.value;
       const rank = state.filters.sort === 'trending' ? (startIndex + added + 1) : null;
-      
       fragment.appendChild(createCard(channel, post, rank));
       added++;
     }
@@ -656,98 +698,133 @@ async function loadBatch() {
   
   if (added > 0) {
     document.getElementById('feed').appendChild(fragment);
+    _updateStatusBar();
   }
   
-  // تحقق من النهاية
-  if (state.currentIndex >= filteredPool.length) {
-    state.hasMore = false;
-  }
+  if (state.currentIndex >= filteredPool.length) state.hasMore = false;
   
-  // عرض رسالة "لا يوجد نتائج" إذا لزم
   const feed = document.getElementById('feed');
   const empty = document.getElementById('emptyState');
+  empty.style.display = (feed.children.length === 0 && !state.isLoading) ? 'block' : 'none';
   
-  if (feed.children.length === 0 && !state.isLoading) {
-    empty.style.display = 'block';
-  } else {
-    empty.style.display = 'none';
-  }
-  
-  document.getElementById('spinnerWrap').classList.remove('active');
+  if (!isFirstBatch) spinner.classList.remove('active');
   state.isLoading = false;
 }
 
 /**
- * 🔄 Apply Filters & Reset Feed
+ * 🔄 Apply Filters
  */
 function applyFilters() {
   state.filteredPool = buildPool();
   state.currentIndex = 0;
   state.hasMore = true;
-  
   document.getElementById('feed').innerHTML = '';
   document.getElementById('emptyState').style.display = 'none';
-  
-  // تحميل الدفعة الأولى
-  loadBatch();
+  loadBatch(true); // Fast first load
 }
 
 /**
- * 🔍 Debounced Search
+ * 🚀 Quick Start - Show cached content immediately
+ */
+async function quickStart() {
+  const cachedKeys = Object.keys(localStorage)
+    .filter(k => k.startsWith('tp_'))
+    .slice(0, 6);
+  
+  if (cachedKeys.length === 0) return false;
+  
+  const fragment = document.createDocumentFragment();
+  let count = 0;
+  
+  for (const key of cachedKeys) {
+    try {
+      const item = JSON.parse(localStorage.getItem(key));
+      if (item && Date.now() - item.timestamp < CONFIG.CACHE_TTL) {
+        const { channel, post } = item.data;
+        // Basic filter check
+        if (state.filters.search && !channel.title?.toLowerCase().includes(state.filters.search)) continue;
+        fragment.appendChild(createCard(channel, post));
+        if (++count >= 4) break;
+      }
+    } catch {}
+  }
+  
+  if (count > 0) {
+    document.getElementById('feed').appendChild(fragment);
+    _updateStatusBar();
+    return true;
+  }
+  return false;
+}
+
+/**
+ * 📊 Status Bar Updates
+ */
+function _updateStatusBar() {
+  const bar = document.getElementById('statusBar');
+  const stats = cache.getStats();
+  const queueStats = requestQueue.getStats();
+  
+  document.getElementById('cacheStats').textContent = 
+    `Cache: ${StorageCache.getCount()} (${stats.hitRate}% hit)`;
+  
+  if (state.isLoading) {
+    document.getElementById('statusText').textContent = 
+      `Loading... (${queueStats.active}/${CONFIG.CONCURRENT_REQUESTS})`;
+    bar.style.display = 'flex';
+  } else if (state.filteredPool.length > 0) {
+    document.getElementById('statusText').textContent = 
+      `Showing ${document.getElementById('feed').children.length}/${state.filteredPool.length} posts`;
+    bar.style.display = 'flex';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+/**
+ * 🔍 Debounce Helper
  */
 function debounce(func, wait) {
   let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
+  return (...args) => {
     clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
+    timeout = setTimeout(() => func.apply(this, args), wait);
   };
 }
-
 const debouncedSearch = debounce((value) => {
   state.filters.search = value.toLowerCase().trim();
   applyFilters();
-}, 300);
+}, 250);
 
 /**
  * 🎛️ Event Listeners
  */
 function setupEvents() {
-  // Search
-  document.getElementById('search').addEventListener('input', (e) => {
-    debouncedSearch(e.target.value);
+  document.getElementById('search').addEventListener('input', e => debouncedSearch(e.target.value));
+  document.getElementById('sortSelect').addEventListener('change', e => { state.filters.sort = e.target.value; applyFilters(); });
+  document.getElementById('langSelect').addEventListener('change', e => { 
+    state.filters.lang = e.target.value; 
+    cache.clear(); 
+    applyFilters(); 
   });
   
-  // Sort Change
-  document.getElementById('sortSelect').addEventListener('change', (e) => {
-    state.filters.sort = e.target.value;
-    applyFilters();
-  });
-  
-  // Language Change
-  document.getElementById('langSelect').addEventListener('change', (e) => {
-    state.filters.lang = e.target.value;
-    cache.clear(); // مسح الكاش عند تغيير اللغة
-    applyFilters();
-  });
-  
-  // Infinite Scroll
+  // Infinite scroll
   window.addEventListener('scroll', () => {
-    const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-    
-    if (scrollTop + clientHeight >= scrollHeight - 1000) {
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 800) {
       loadBatch();
     }
   });
   
-  // Visibility Change - تنظيف الكاش عند الخروج
+  // Logo click: refresh
+  document.getElementById('logo').addEventListener('click', () => {
+    cache.clear();
+    StorageCache.clear();
+    location.reload();
+  });
+  
+  // Visibility: cleanup
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      cache.cleanup();
-    }
+    if (document.hidden) cache.cleanup();
   });
 }
 
@@ -755,25 +832,38 @@ function setupEvents() {
  * 🚀 Initialize App
  */
 async function init() {
+  // Try quick start first
+  const quickLoaded = await quickStart();
+  
   try {
     const response = await fetch('./channels_data.json');
     state.allChannels = await response.json();
     state.allChannels = state.allChannels.filter(c => c.username);
-    
   } catch (error) {
     console.error('Failed to load channels:', error);
     state.allChannels = [];
   }
   
-  // Set defaults
+  // Defaults
   document.getElementById('langSelect').value = 'arabic';
   document.getElementById('sortSelect').value = 'trending';
   
   setupEvents();
-  applyFilters();
   
-  // تنظيف دوري للكاش كل 5 دقائق
-  setInterval(() => cache.cleanup(), 5 * 60 * 1000);
+  if (!quickLoaded) {
+    applyFilters();
+  } else {
+    // Load rest in background
+    setTimeout(applyFilters, 100);
+  }
+  
+  // Periodic cleanup
+  setInterval(() => {
+    cache.cleanup();
+    _updateStatusBar();
+  }, 5 * 60 * 1000);
+  
+  state.initialized = true;
 }
 
 // Start
