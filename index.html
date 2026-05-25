@@ -57,6 +57,59 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 }
 .hdr-select:focus{border-color:var(--accent)}
 
+/* ── SECTIONS ── */
+
+.sections-bar{
+
+  position:sticky;
+  top:54px;
+  z-index:998;
+
+  display:flex;
+  gap:8px;
+
+  overflow-x:auto;
+
+  padding:10px 12px;
+
+  background:var(--bg);
+
+}
+
+.sections-bar::-webkit-scrollbar{
+
+  display:none;
+
+}
+
+.section-btn{
+
+  flex-shrink:0;
+
+  border:none;
+
+  background:var(--tag-bg);
+
+  color:var(--text);
+
+  padding:8px 14px;
+
+  border-radius:999px;
+
+  font-size:12px;
+
+  cursor:pointer;
+
+}
+
+.section-btn.active{
+
+  background:var(--accent);
+
+  color:#fff;
+
+}
+
 /* ── TAGS ── */
 .tags-bar{
   position:sticky;top:var(--header-h);z-index:998;
@@ -121,46 +174,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   padding:12px 14px;font-size:14px;line-height:1.65;
   word-break:break-word;color:var(--text);
 }
-.post-text a{color:var(--accent);text-decoration:none}
-.post-text.clamped{
-  display:-webkit-box;-webkit-line-clamp:5;
-  -webkit-box-orient:vertical;overflow:hidden;
-}
-.read-more{
-  padding:0 14px 10px;font-size:13px;
-  color:var(--accent);cursor:pointer;display:block;
-}
-
-.post-foot{
-  display:flex;align-items:center;gap:14px;
-  padding:8px 14px 13px;border-top:1px solid var(--border);
-}
-.stat{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text3)}
-.stat svg{width:14px;height:14px;stroke:var(--text3);fill:none;stroke-width:1.8;stroke-linecap:round}
-
-/* ── SKELETON ── */
-.copy-btn{
-
-  margin-left:auto;
-
-  border:none;
-
-  background:var(--tag-bg);
-
-  color:var(--text);
-
-  border-radius:999px;
-
-  padding:7px 14px;
-
-  font-size:12px;
-
-  cursor:pointer;
-
-}
-
-/* ── HASHTAGS ── */
-
 .hashtags{
 
   display:flex;
@@ -186,7 +199,43 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   border-radius:999px;
 
 }
+.post-text a{color:var(--accent);text-decoration:none}
+.post-text.clamped{
+  display:-webkit-box;-webkit-line-clamp:5;
+  -webkit-box-orient:vertical;overflow:hidden;
+}
+.read-more{
+  padding:0 14px 10px;font-size:13px;
+  color:var(--accent);cursor:pointer;display:block;
+}
 
+.post-foot{
+  display:flex;align-items:center;gap:14px;
+  padding:8px 14px 13px;border-top:1px solid var(--border);
+}
+.stat{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text3)}
+.stat svg{width:14px;height:14px;stroke:var(--text3);fill:none;stroke-width:1.8;stroke-linecap:round}
+.copy-btn{
+
+  margin-left:auto;
+
+  border:none;
+
+  background:var(--tag-bg);
+
+  color:var(--text);
+
+  border-radius:999px;
+
+  padding:7px 14px;
+
+  font-size:12px;
+
+  cursor:pointer;
+
+}
+
+/* ── SKELETON ── */
 .skeleton{
   background:var(--surface);border:1px solid var(--border);
   border-radius:20px;overflow:hidden;padding:13px 14px;
@@ -228,13 +277,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <input type="text" id="search" class="search" placeholder="Search…" autocomplete="off">
   </div>
   <select id="sortSelect" class="hdr-select">
-    <!-- CHANGE #5 -->
     <option value="newest" selected>🕒 Newest</option>
     <option value="views">🔥 Views</option>
     <option value="az">🔤 A–Z</option>
     <option value="random">🔀 Random</option>
-    <!-- END CHANGE #5 -->
-  </select>
+    </select>
   <select id="langSelect" class="hdr-select">
     <option value="all">🌍 All</option>
     <option value="arabic">🇸🇦 AR</option>
@@ -272,92 +319,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <div class="tags-bar" id="tagsBar"></div>
 
-<div class="feed" id="feed"></div>
+<div class="feed" id="feed">
+  <div id="sentinel"></div>
+</div>
 <div class="spinner-wrap" id="spinnerWrap"><div class="spinner"></div></div>
 
-<!-- IMPORTANT -->
-<!-- فقط استبدل الجزء ده داخل script -->
-<!-- من أول const WORKER -->
-<!-- لحد boot(); -->
-
 <script>
-function copyPost(username,id){
-
-  const url =
-  `https://t.me/${username}/${id}`;
-
-  navigator.clipboard.writeText(url);
-
-  alert('Copied');
-
-}
-
-function extractTags(text){
-
-  if(!text){
-    return [];
-  }
-
-  const clean =
-  text
-  .replace(/<[^>]*>/g,'')
-  .toLowerCase();
-
-  const map = {
-
-    Tech:[
-      'ai',
-      'python',
-      'android',
-      'coding'
-    ],
-
-    Crypto:[
-      'bitcoin',
-      'crypto',
-      'btc'
-    ],
-
-    Games:[
-      'pubg',
-      'gaming',
-      'ps5'
-    ],
-
-    Movies:[
-      'movie',
-      'film',
-      'netflix'
-    ],
-
-    Sports:[
-      'football',
-      'soccer',
-      'fifa'
-    ]
-
-  };
-
-  const found = [];
-
-  Object.entries(map)
-  .forEach(([tag,words])=>{
-
-    if(
-      words.some(
-        w=>clean.includes(w)
-      )
-    ){
-
-      found.push(tag);
-
-    }
-
-  });
-
-  return found.slice(0,3);
-
-}
 
 const WORKER =
 'https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=';
@@ -413,7 +380,30 @@ let searchQ = '';
 
 let activeLang = 'arabic';
 
-let activeSort = 'newest'; // Re-introducing activeSort as it was removed in a previous diff but is needed now.
+let activeSort = 'newest';
+
+document
+.querySelectorAll('.section-btn')
+.forEach(btn=>{
+
+  btn.addEventListener('click',()=>{
+
+    document
+    .querySelectorAll('.section-btn')
+    .forEach(
+      b=>b.classList.remove('active')
+    );
+
+    btn.classList.add('active');
+
+    activeSort =
+    btn.dataset.sort;
+
+    applyFilters();
+
+  });
+
+});
 
 
 // ─────────────────────────────
@@ -429,7 +419,7 @@ function detectLang(text){
 
   if(/[\u0600-\u06FF]/.test(plain)){
 
-    if(/[پگچژکی]/.test(plain)){
+    if(/[پگچژكي]/.test(plain)){
       return 'persian';
     }
 
@@ -721,7 +711,6 @@ function makeCard(channel,post){
       :
 
       ''
-
     }
 
     ${
@@ -738,48 +727,46 @@ function makeCard(channel,post){
       :
 
       ''
-
     }
+<div class="hashtags">
 
-    <div class="hashtags">
+  ${
+    extractTags(post.text)
+    .map(tag=>
 
-      ${
-        extractTags(post.text)
-        .map(tag=>
+      `<span class="hashtag">
+      #${tag}
+      </span>`
 
-          `<span class="hashtag">
-          #${tag}
-          </span>`
+    )
+    .join('')
+  }
 
-        )
-        .join('')
-      }
-
-    </div>
+</div>
 
     <div class="post-foot">
 
-      <div class="stat">
+  <div class="stat">
 
-        👁️ ${post.views || 0}
+    👁️ ${post.views || 0}
 
-      </div>
+  </div>
 
-      <button
-      class="copy-btn"
-      onclick="
-      copyPost(
-        '${channel.username}',
-        '${channel.last_post_id}'
-      )
-      "
-      >
+  <button
+  class="copy-btn"
+  onclick="
+  copyPost(
+    '${channel.username}',
+    '${channel.last_post_id}'
+  )
+  "
+  >
 
-      🔗 Copy
+  🔗 Copy
 
-      </button>
+  </button>
 
-    </div>
+</div>
 
   `;
 
@@ -1070,7 +1057,16 @@ if(activeSort === 'newest'){
 
     );
 
-}
+  }
+
+  if(activeSort === 'random'){
+
+    list =
+    list.sort(
+      ()=>Math.random()-.5
+    );
+
+  }
 
 if(activeSort === 'biggest'){
 
@@ -1131,16 +1127,7 @@ if(activeSort === 'gems'){
 
   );
 
-  }
-
-  if(activeSort === 'random'){
-
-    list =
-    list.sort(
-      ()=>Math.random()-.5
-    );
-
-  }
+}
 
   if(activeSort === 'views'){
 
@@ -1222,29 +1209,6 @@ document
 });
 
 document
-.querySelectorAll('.section-btn')
-.forEach(btn=>{
-
-  btn.addEventListener('click',()=>{
-
-    document
-    .querySelectorAll('.section-btn')
-    .forEach(
-      b=>b.classList.remove('active')
-    );
-
-    btn.classList.add('active');
-
-    activeSort =
-    btn.dataset.sort;
-
-    applyFilters();
-
-  });
-
-});
-
-document
 .getElementById('langSelect')
 .addEventListener('change',e=>{
 
@@ -1285,6 +1249,84 @@ window.addEventListener('scroll',()=>{
 // ─────────────────────────────
 // BOOT
 // ─────────────────────────────
+
+function copyPost(username,id){
+
+  const url =
+  `https://t.me/${username}/${id}`;
+
+  navigator.clipboard.writeText(url);
+
+  alert('Copied');
+
+}
+
+function extractTags(text){
+
+  if(!text){
+    return [];
+  }
+
+  const clean =
+  text
+  .replace(/<[^>]*>/g,'')
+  .toLowerCase();
+
+  const map = {
+
+    Tech:[
+      'ai',
+      'python',
+      'android',
+      'coding'
+    ],
+
+    Crypto:[
+      'bitcoin',
+      'crypto',
+      'btc'
+    ],
+
+    Games:[
+      'pubg',
+      'gaming',
+      'ps5'
+    ],
+
+    Movies:[
+      'movie',
+      'film',
+      'netflix'
+    ],
+
+    Sports:[
+      'football',
+      'soccer',
+      'fifa'
+    ]
+
+  };
+
+  const found = [];
+
+  Object.entries(map)
+  .forEach(([tag,words])=>{
+
+    if(
+      words.some(
+        w=>clean.includes(w)
+      )
+    ){
+
+      found.push(tag);
+
+    }
+
+  });
+
+  return found.slice(0,3);
+
+}
 
 async function boot(){
 
