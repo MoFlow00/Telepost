@@ -507,25 +507,52 @@ function calculateTrendingScore(channel){
   const timestamp =
   channel.last_post_timestamp || 0;
 
+  // عمر البوست بالساعات
+
   const ageHours =
   ((Date.now()/1000)-timestamp)/3600;
 
+  // لو أقدم من 14 يوم ندفنه
+
+  if(ageHours > 336){
+
+    return 0;
+
+  }
+
+  // freshness تدريجي خلال 14 يوم
+
   const freshness =
-  Math.max(
-    0.15,
-    1 - (ageHours / 48)
-  );
+  1 - (ageHours / 336);
+
+  // engagement
 
   const engagement =
   views / subs;
 
+  // random shuffle خفيف ثابت
+
+  const randomBoost =
+  Math.random() * 0.25;
+
   return (
-    (views * 0.35)
+
+    (views * 0.30)
+
     +
-    (engagement * 5000)
+
+    (engagement * 7000)
+
     +
-    (freshness * 2000)
+
+    (freshness * 4000)
+
+    +
+
+    (randomBoost * 1000)
+
   );
+
 }
 
 function buildPool(){
@@ -575,23 +602,29 @@ function buildPool(){
 
   if(activeSort === 'trending'){
 
-    list.sort((a,b)=>{
+  list = list.filter(ch => {
 
-      const scoreA =
-      calculateTrendingScore(a)
-      +
-      Math.random() * 300;
+    const ts =
+    ch.last_post_timestamp || 0;
 
-      const scoreB =
-      calculateTrendingScore(b)
-      +
-      Math.random() * 300;
+    const ageHours =
+    ((Date.now()/1000)-ts)/3600;
 
-      return scoreB - scoreA;
+    return ageHours <= 336;
 
-    });
+  });
 
-  }
+  list.sort((a,b)=>
+
+    calculateTrendingScore(b)
+
+    -
+
+    calculateTrendingScore(a)
+
+  );
+
+}
 
   // NEWEST
 
