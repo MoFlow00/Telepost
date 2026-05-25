@@ -61,6 +61,54 @@ def parse_number(text):
 
 
 # ─────────────────────────────
+# LANGUAGE DETECTION
+# ─────────────────────────────
+
+def detect_language(text):
+
+    if not text:
+        return "other"
+
+    text = text.lower()
+
+    # Arabic / Persian
+
+    if any(
+        '\u0600' <= c <= '\u06FF'
+        for c in text
+    ):
+
+        # Persian letters
+
+        persian_letters = [
+            'پ',
+            'چ',
+            'ژ',
+            'گ',
+            'ک',
+            'ی'
+        ]
+
+        if any(
+            ch in text
+            for ch in persian_letters
+        ):
+            return "persian"
+
+        return "arabic"
+
+    # English
+
+    if any(
+        'a' <= c <= 'z'
+        for c in text
+    ):
+        return "english"
+
+    return "other"
+
+
+# ─────────────────────────────
 # LOAD JSON
 # ─────────────────────────────
 
@@ -83,8 +131,9 @@ except Exception as e:
 
     channels = []
 
+
 # ─────────────────────────────
-# UPDATE
+# UPDATE CHANNELS
 # ─────────────────────────────
 
 total = len(channels)
@@ -156,7 +205,15 @@ for index, channel in enumerate(channels):
 
             continue
 
-        last = posts[-1]
+        # آخر بوستين
+
+        last_posts = posts[-2:]
+
+        # ─────────────────────────────
+        # LAST POST
+        # ─────────────────────────────
+
+        last = last_posts[-1]
 
         # ─────────────────────────────
         # POST ID
@@ -309,6 +366,51 @@ for index, channel in enumerate(channels):
                     break
 
         # ─────────────────────────────
+        # LAST 2 POSTS TEXT
+        # ─────────────────────────────
+
+        last_posts_text = []
+
+        for p in last_posts:
+
+            txt = p.select_one(
+                ".tgme_widget_message_text"
+            )
+
+            if txt:
+
+                clean_text = txt.get_text(
+                    " ",
+                    strip=True
+                )
+
+                if clean_text:
+
+                    last_posts_text.append(
+                        clean_text[:500]
+                    )
+
+        combined_text = " ".join(
+            last_posts_text
+        )
+
+        # ─────────────────────────────
+        # LANGUAGE
+        # ─────────────────────────────
+
+        language = detect_language(
+            combined_text
+        )
+
+        # simplify
+
+        if language not in [
+            "arabic",
+            "english"
+        ]:
+            language = "other"
+
+        # ─────────────────────────────
         # SAVE
         # ─────────────────────────────
 
@@ -332,6 +434,14 @@ for index, channel in enumerate(channels):
             "subscribers"
         ] = subscribers
 
+        channel[
+            "language"
+        ] = language
+
+        channel[
+            "last_posts_text"
+        ] = last_posts_text
+
         print(
 
             "UPDATED:",
@@ -345,7 +455,10 @@ for index, channel in enumerate(channels):
             views,
 
             "| SUBS:",
-            subscribers
+            subscribers,
+
+            "| LANG:",
+            language
 
         )
 
@@ -380,6 +493,31 @@ for index, channel in enumerate(channels):
         )
 
         continue
+
+
+# ─────────────────────────────
+# REMOVE DEAD CHANNELS
+# ─────────────────────────────
+
+cleaned = []
+
+for ch in channels:
+
+    if ch.get(
+        "last_post_timestamp",
+        0
+    ) > 0:
+
+        cleaned.append(ch)
+
+print(
+    "\nREMOVED:",
+    len(channels) - len(cleaned),
+    "DEAD CHANNELS"
+)
+
+channels = cleaned
+
 
 # ─────────────────────────────
 # SAVE JSON
