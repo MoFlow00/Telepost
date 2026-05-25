@@ -21,7 +21,6 @@
 }
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
-/* ── HEADER ── */
 .header{
   position:sticky;top:0;z-index:999;
   background:rgba(255,255,255,.92);
@@ -47,7 +46,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 }
 .search:focus{border-color:var(--accent)}
 
-/* sort + language selects */
 .hdr-select{
   padding:7px 10px;border:1.5px solid var(--border);
   border-radius:22px;background:var(--tag-bg);color:var(--text);
@@ -57,60 +55,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 }
 .hdr-select:focus{border-color:var(--accent)}
 
-/* ── SECTIONS ── */
-
-.sections-bar{
-
-  position:sticky;
-  top:54px;
-  z-index:998;
-
-  display:flex;
-  gap:8px;
-
-  overflow-x:auto;
-
-  padding:10px 12px;
-
-  background:var(--bg);
-
-}
-
-.sections-bar::-webkit-scrollbar{
-
-  display:none;
-
-}
-
-.section-btn{
-
-  flex-shrink:0;
-
-  border:none;
-
-  background:var(--tag-bg);
-
-  color:var(--text);
-
-  padding:8px 14px;
-
-  border-radius:999px;
-
-  font-size:12px;
-
-  cursor:pointer;
-
-}
-
-.section-btn.active{
-
-  background:var(--accent);
-
-  color:#fff;
-
-}
-
-/* ── TAGS ── */
 .tags-bar{
   position:sticky;top:var(--header-h);z-index:998;
   background:var(--surface);border-bottom:1px solid var(--border);
@@ -128,15 +72,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .tag:hover{border-color:var(--accent);color:var(--accent)}
 .tag.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-/* ── FEED ── */
 .feed{max-width:640px;margin:0 auto;padding:16px 12px 60px;display:flex;flex-direction:column;gap:16px}
 
-/* ── CARD ── */ /* CHANGE #7 */
 .post-card{
   background:var(--surface);
-  border:1px solid var(--border); /* Keep */
-  border-radius:20px;overflow:hidden; /* Keep */
-  box-shadow:0 4px 16px rgba(0,0,0,.08); /* Stronger shadow */
+  border:1px solid var(--border);
+  border-radius:20px;overflow:hidden;
+  box-shadow:0 4px 16px rgba(0,0,0,.08);
   animation:fadeUp .3s ease both;
 }
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -155,11 +97,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 }
 .post-channel:hover{color:var(--accent)}
 .post-date{font-size:11px;color:var(--text3);margin-top:2px}
-.lang-badge{
-  display:inline-block;margin-left:5px;
-  font-size:10px;padding:1px 6px;border-radius:8px;
-  background:var(--tag-bg);color:var(--text3);font-weight:600;
-}
 .open-btn{
   padding:7px 14px;border-radius:22px;
   background:var(--accent);color:#fff;
@@ -174,31 +111,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   padding:12px 14px;font-size:14px;line-height:1.65;
   word-break:break-word;color:var(--text);
 }
-.hashtags{
-
-  display:flex;
-
-  flex-wrap:wrap;
-
-  gap:8px;
-
-  padding:0 14px 14px;
-
-}
-
-.hashtag{
-
-  background:var(--tag-bg);
-
-  color:var(--text2);
-
-  font-size:11px;
-
-  padding:5px 10px;
-
-  border-radius:999px;
-
-}
 .post-text a{color:var(--accent);text-decoration:none}
 .post-text.clamped{
   display:-webkit-box;-webkit-line-clamp:5;
@@ -209,33 +121,34 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   color:var(--accent);cursor:pointer;display:block;
 }
 
+/* ── HASHTAGS ── */
+.post-hashtags{
+  display:flex;flex-wrap:wrap;gap:6px;
+  padding:4px 14px 10px;
+}
+.post-hashtag{
+  font-size:12px;color:var(--accent);
+  background:rgba(0,149,246,.08);
+  padding:3px 10px;border-radius:22px;
+  cursor:pointer;transition:background .15s;
+  border:none;font-family:'Inter',sans-serif;
+  font-weight:500;
+}
+.post-hashtag:hover{background:rgba(0,149,246,.18)}
+
 .post-foot{
   display:flex;align-items:center;gap:14px;
   padding:8px 14px 13px;border-top:1px solid var(--border);
 }
 .stat{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text3)}
 .stat svg{width:14px;height:14px;stroke:var(--text3);fill:none;stroke-width:1.8;stroke-linecap:round}
-.copy-btn{
 
-  margin-left:auto;
-
-  border:none;
-
-  background:var(--tag-bg);
-
-  color:var(--text);
-
-  border-radius:999px;
-
-  padding:7px 14px;
-
-  font-size:12px;
-
-  cursor:pointer;
-
+/* sort badge on card */
+.sort-badge{
+  margin-left:auto;font-size:11px;color:var(--text3);
+  background:var(--tag-bg);padding:3px 8px;border-radius:10px;
 }
 
-/* ── SKELETON ── */
 .skeleton{
   background:var(--surface);border:1px solid var(--border);
   border-radius:20px;overflow:hidden;padding:13px 14px;
@@ -247,10 +160,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .sk-circle{width:42px;height:42px;border-radius:50%;flex-shrink:0}
 .sk-img{width:100%;height:180px;border-radius:10px;margin-bottom:10px}
 
-/* ── SENTINEL (infinite scroll trigger) ── */
 #sentinel{height:1px}
 
-/* ── SPINNER ── */
 .spinner-wrap{padding:20px;text-align:center;display:none}
 .spinner-wrap.active{display:block}
 .spinner{
@@ -262,10 +173,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── EMPTY ── */
 .empty{padding:60px 20px;text-align:center;color:var(--text3);font-size:14px}
-
-/* ── NEWEST SORT NOTICE ── */
 </style>
 </head>
 <body>
@@ -277,11 +185,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <input type="text" id="search" class="search" placeholder="Search…" autocomplete="off">
   </div>
   <select id="sortSelect" class="hdr-select">
-    <option value="newest" selected>🕒 Newest</option>
-    <option value="views">🔥 Views</option>
+    <option value="trending">🔥 Trending</option>
+    <option value="newest">🕒 Newest</option>
+    <option value="biggest">👑 Biggest</option>
+    <option value="fastgrowing">🚀 Fast Growing</option>
+    <option value="hiddengems">💎 Hidden Gems</option>
     <option value="az">🔤 A–Z</option>
     <option value="random">🔀 Random</option>
-    </select>
+  </select>
   <select id="langSelect" class="hdr-select">
     <option value="all">🌍 All</option>
     <option value="arabic">🇸🇦 AR</option>
@@ -293,30 +204,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </select>
 </header>
 
-<div class="sections-bar">
-
-<button class="section-btn active" data-sort="newest">
-🕒 Latest
-</button>
-
-<button class="section-btn" data-sort="views">
-🔥 Trending
-</button>
-
-<button class="section-btn" data-sort="growing">
-🚀 Fast Growing
-</button>
-
-<button class="section-btn" data-sort="biggest">
-👑 Biggest
-</button>
-
-<button class="section-btn" data-sort="gems">
-💎 Hidden Gems
-</button>
-
-</div>
-
 <div class="tags-bar" id="tagsBar"></div>
 
 <div class="feed" id="feed">
@@ -326,1048 +213,510 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <script>
 
-const WORKER =
-'https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=';
-
+const WORKER = 'https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=';
 const BATCH = 20;
-
 const CONCURRENT = 12;
 
-  const NSFW_WORDS = [
+const NSFW_WORDS = [
+  'porn','xxx','sex','nude','onlyfans','nsfw','escort','adult','camgirl','hentai',
+  'سكس','نيك','ممحونة','ممحون','اباحي','جنس','شرموطة',
+  'xnxx','xvideos','pornhub'
+];
 
-  // english
-
-  'porn',
-  'xxx',
-  'sex',
-  'nude',
-  'onlyfans',
-  'nsfw',
-  'escort',
-  'adult',
-  'camgirl',
-  'hentai',
-
-  // arabic
-
-  'سكس',
-  'نيك',
-  'ممحونة',
-  'ممحون',
-  'اباحي',
-  'جنس',
-  'شرموطة',
-
-  // common domains
-
-  'xnxx',
-  'xvideos',
-  'pornhub'
-
+// ── HASHTAGS CONFIG ──
+// اضف هاشتاقات حسب موضوع قنواتك
+const HASHTAG_CATEGORIES = [
+  { label: '📱 تقنية',    tags: ['تقنية','تكنولوجيا','tech','technology','android','iphone','ai','ذكاء اصطناعي'] },
+  { label: '📰 أخبار',    tags: ['أخبار','خبر','news','breaking','عاجل'] },
+  { label: '💰 اقتصاد',   tags: ['اقتصاد','استثمار','بورصة','crypto','bitcoin','عملات'] },
+  { label: '⚽ رياضة',    tags: ['رياضة','كرة','كرة القدم','sport','football','مباراة'] },
+  { label: '🎬 ترفيه',    tags: ['ترفيه','فيلم','مسلسل','movie','series','entertainment'] },
+  { label: '🔬 علوم',     tags: ['علوم','science','space','فضاء','طب','health'] },
+  { label: '📚 تعليم',    tags: ['تعليم','تعلم','education','learn','course','دورة'] },
+  { label: '🌍 سياسة',   tags: ['سياسة','politics','دولي','عالمي'] },
 ];
 
 const CACHE = new Map();
-
 let allChannels = [];
-
 let pool = [];
-
 let poolIndex = 0;
-
 let isLoading = false;
-
 let searchQ = '';
-
 let activeLang = 'arabic';
-
-let activeSort = 'newest';
-
-document
-.querySelectorAll('.section-btn')
-.forEach(btn=>{
-
-  btn.addEventListener('click',()=>{
-
-    document
-    .querySelectorAll('.section-btn')
-    .forEach(
-      b=>b.classList.remove('active')
-    );
-
-    btn.classList.add('active');
-
-    activeSort =
-    btn.dataset.sort;
-
-    applyFilters();
-
-  });
-
-});
-
+let activeSort = 'trending';
+let activeHashtag = null;
 
 // ─────────────────────────────
 // LANGUAGE
 // ─────────────────────────────
-
 function detectLang(text){
-
   if(!text) return 'other';
-
-  const plain =
-  text.replace(/<[^>]*>/g,'');
-
+  const plain = text.replace(/<[^>]*>/g,'');
   if(/[\u0600-\u06FF]/.test(plain)){
-
-    if(/[پگچژكي]/.test(plain)){
-      return 'persian';
-    }
-
+    if(/[پگچژکی]/.test(plain)) return 'persian';
     return 'arabic';
-
   }
-
-  if(/[А-Яа-яЁё]/.test(plain)){
-    return 'russian';
-  }
-
-  if(/[şğıüçöİĞŞ]/i.test(plain)){
-    return 'turkish';
-  }
-
-  if(/[a-z]/i.test(plain)){
-    return 'english';
-  }
-
+  if(/[А-Яа-яЁё]/.test(plain)) return 'russian';
+  if(/[şğıüçöİĞŞ]/i.test(plain)) return 'turkish';
+  if(/[a-z]/i.test(plain)) return 'english';
   return 'other';
-
 }
 
+// ─────────────────────────────
+// HASHTAG DETECTION
+// ─────────────────────────────
+function extractHashtags(text){
+  if(!text) return [];
+  const plain = text.replace(/<[^>]*>/g,' ');
+  // استخرج هاشتاقات تيليجرام الحقيقية
+  const tgTags = [...plain.matchAll(/#([\u0600-\u06FFa-zA-Z0-9_]+)/g)]
+    .map(m => '#' + m[1]);
+
+  // كشف الكاتيجوري
+  const lowerPlain = plain.toLowerCase();
+  const catTags = [];
+  HASHTAG_CATEGORIES.forEach(cat => {
+    const hit = cat.tags.some(t => lowerPlain.includes(t.toLowerCase()));
+    if(hit) catTags.push(cat.label);
+  });
+
+  // دمج بدون تكرار، max 4
+  const all = [...new Set([...tgTags.slice(0,3), ...catTags.slice(0,2)])];
+  return all.slice(0,4);
+}
+
+function matchHashtag(ch){
+  if(!activeHashtag) return true;
+  const text = (ch.lastText || '') + ' ' + (ch.title || '');
+  const lowerText = text.toLowerCase();
+  // إيجاد الكاتيجوري اللي اختارها
+  const cat = HASHTAG_CATEGORIES.find(c => c.label === activeHashtag);
+  if(cat){
+    return cat.tags.some(t => lowerText.includes(t.toLowerCase()));
+  }
+  // لو هاشتاج عادي
+  return lowerText.includes(activeHashtag.replace('#','').toLowerCase());
+}
 
 // ─────────────────────────────
 // SEARCH
 // ─────────────────────────────
-
 function matchSearch(ch,q){
-
   if(!q) return true;
-
-  const title =
-  (ch.title || '')
-  .toLowerCase();
-
-  const user =
-  (ch.username || '')
-  .toLowerCase();
-
-  const text =
-  (ch.lastText || '')
-  .toLowerCase();
-
-  return (
-
-    title.includes(q)
-
-    ||
-
-    user.includes(q)
-
-    ||
-
-    text.includes(q)
-
-  );
-
+  const title = (ch.title || '').toLowerCase();
+  const user = (ch.username || '').toLowerCase();
+  const text = (ch.lastText || '').toLowerCase();
+  return title.includes(q) || user.includes(q) || text.includes(q);
 }
-
 
 // ─────────────────────────────
 // DATE
 // ─────────────────────────────
-
 function formatDate(d){
-
   if(!d) return '';
-
   try{
-
-    const dt =
-    new Date(d);
-
-    const now =
-    new Date();
-
-    const diff =
-    (now-dt)/1000;
-
-    if(diff < 60){
-      return 'Just now';
-    }
-
-    if(diff < 3600){
-      return Math.floor(diff/60)+'m ago';
-    }
-
-    if(diff < 86400){
-      return Math.floor(diff/3600)+'h ago';
-    }
-
-    if(diff < 604800){
-      return Math.floor(diff/86400)+'d ago';
-    }
-
+    const dt = new Date(d);
+    const now = new Date();
+    const diff = (now-dt)/1000;
+    if(diff < 60) return 'Just now';
+    if(diff < 3600) return Math.floor(diff/60)+'m ago';
+    if(diff < 86400) return Math.floor(diff/3600)+'h ago';
+    if(diff < 604800) return Math.floor(diff/86400)+'d ago';
     return dt.toLocaleDateString();
-
-  }catch(e){
-
-    return '';
-
-  }
-
+  }catch(e){ return ''; }
 }
 
+// ─────────────────────────────
+// PARSE VIEWS
+// ─────────────────────────────
+function parseViews(v){
+  if(!v) return 0;
+  const s = String(v).replace(/,/g,'').trim();
+  if(s.endsWith('K') || s.endsWith('k')) return parseFloat(s)*1000;
+  if(s.endsWith('M') || s.endsWith('m')) return parseFloat(s)*1000000;
+  return parseInt(s.replace(/[^\d]/g,'')) || 0;
+}
 
 // ─────────────────────────────
-// PARSE
+// PARSE LAST POST
 // ─────────────────────────────
-
 function parseLastPost(html){
-
-  const doc =
-  new DOMParser()
-  .parseFromString(
-    html,
-    'text/html'
-  );
-
-  const posts =
-  doc.querySelectorAll(
-    '.tgme_widget_message_wrap'
-  );
-
-  if(!posts.length){
-    return null;
-  }
-
-  const last =
-  posts[posts.length - 1];
+  const doc = new DOMParser().parseFromString(html,'text/html');
+  const posts = doc.querySelectorAll('.tgme_widget_message_wrap');
+  if(!posts.length) return null;
+  const last = posts[posts.length-1];
 
   let text = '';
-
-  const textEl =
-  last.querySelector(
-    '.tgme_widget_message_text'
-  );
-
-  if(textEl){
-    text =
-    textEl.innerHTML.trim();
-  }
+  const textEl = last.querySelector('.tgme_widget_message_text');
+  if(textEl) text = textEl.innerHTML.trim();
 
   let img = null;
-
-  const imgEl =
-  last.querySelector(
-    '.tgme_widget_message_photo_wrap'
-  );
-
+  const imgEl = last.querySelector('.tgme_widget_message_photo_wrap');
   if(imgEl){
-
-    const style =
-    imgEl.getAttribute(
-      'style'
-    ) || '';
-
-    const match =
-    style.match(
-      /url\(['"]?([^'")]+)['"]?\)/
-    );
-
-    if(match){
-      img = match[1];
-    }
-
+    const style = imgEl.getAttribute('style') || '';
+    const match = style.match(/url\(['"]?([^'")]+)['"]?\)/);
+    if(match) img = match[1];
   }
 
   let date = '';
-
-  const dateEl =
-  last.querySelector(
-    '.tgme_widget_message_date time'
-  );
-
-  if(dateEl){
-
-    date =
-    dateEl.getAttribute(
-      'datetime'
-    ) || '';
-
-  }
+  const dateEl = last.querySelector('.tgme_widget_message_date time');
+  if(dateEl) date = dateEl.getAttribute('datetime') || '';
 
   let views = '';
+  const viewEl = last.querySelector('.tgme_widget_message_views');
+  if(viewEl) views = viewEl.textContent.trim();
 
-  const viewEl =
-  last.querySelector(
-    '.tgme_widget_message_views'
-  );
-
-  if(viewEl){
-
-    views =
-    viewEl.textContent.trim();
-
-  }
-
-  return {
-
-    text,
-    img,
-    date,
-    views
-
-  };
-
+  return { text, img, date, views };
 }
 
+// ─────────────────────────────
+// SORT SCORE HELPERS
+// ─────────────────────────────
+function trendingScore(ch){
+  // views * decay بناءً على عمر البوست
+  const views = ch.lastViews || 0;
+  const ts = ch.last_post_timestamp || 0;
+  const ageHours = ts ? Math.max(0, (Date.now()/1000 - ts) / 3600) : 9999;
+  const decay = 1 / (1 + ageHours / 24); // نص القيمة كل 24 ساعة
+  return views * decay;
+}
+
+function fastGrowingScore(ch){
+  // views / subscribers ratio — channels بتعمل views عالية نسبة لحجمها
+  const views = ch.lastViews || 0;
+  const subs = ch.subscribers || 1;
+  return views / subs;
+}
+
+function hiddenGemScore(ch){
+  // subscribers قليلة (< 50k) لكن engagement عالي
+  const subs = ch.subscribers || 1;
+  const views = ch.lastViews || 0;
+  if(subs > 50000) return 0;
+  return views / Math.log(subs + 2);
+}
+
+// ─────────────────────────────
+// SORT BADGE TEXT
+// ─────────────────────────────
+function sortBadge(ch){
+  if(activeSort === 'trending'){
+    const v = ch.lastViews || 0;
+    return v > 0 ? '🔥 ' + (v >= 1000 ? (v/1000).toFixed(1)+'K' : v) + ' views' : '';
+  }
+  if(activeSort === 'biggest'){
+    const s = ch.subscribers || 0;
+    return s > 0 ? '👑 ' + (s >= 1000 ? (s/1000).toFixed(1)+'K' : s) + ' subs' : '';
+  }
+  if(activeSort === 'fastgrowing'){
+    const r = fastGrowingScore(ch);
+    return r > 0 ? '🚀 ' + (r*100).toFixed(1)+'% rate' : '';
+  }
+  if(activeSort === 'hiddengems'){
+    const s = ch.subscribers || 0;
+    return s > 0 ? '💎 ' + (s >= 1000 ? (s/1000).toFixed(1)+'K' : s) + ' subs' : '';
+  }
+  return '';
+}
 
 // ─────────────────────────────
 // CARD
 // ─────────────────────────────
+function makeCard(channel, post){
+  const hashtags = extractHashtags(post.text || '');
+  const badge = sortBadge(channel);
 
-function makeCard(channel,post){
-
-  const card =
-  document.createElement('div');
-
-  card.className =
-  'post-card';
+  const card = document.createElement('div');
+  card.className = 'post-card';
 
   card.innerHTML = `
-
     <div class="post-head">
-
-      <div
-      class="avatar"
-      style="
-      background:
-      linear-gradient(
-      135deg,
-      #0095f6,
-      #7c3aed
-      )
-      "
-      >
-
-      ${(channel.title || channel.username)
-      .slice(0,2)
-      .toUpperCase()}
-
+      <div class="avatar" style="background:linear-gradient(135deg,#0095f6,#7c3aed)">
+        ${(channel.title || channel.username).slice(0,2).toUpperCase()}
       </div>
-
       <div class="post-meta">
-
-        <a
-        class="post-channel"
-        href="https://t.me/${channel.username}"
-        target="_blank"
-        >
-
-        ${channel.title || channel.username}
-
+        <a class="post-channel" href="https://t.me/${channel.username}" target="_blank">
+          ${channel.title || channel.username}
         </a>
-
-        <div class="post-date">
-
-          ${formatDate(post.date)}
-
-        </div>
-
+        <div class="post-date">${formatDate(post.date)}</div>
       </div>
-
-      <a
-      class="open-btn"
-      href="https://t.me/${channel.username}"
-      target="_blank"
-      >
-
-      Open
-
-      </a>
-
+      <a class="open-btn" href="https://t.me/${channel.username}" target="_blank">Open</a>
     </div>
 
-    ${
-      post.img
+    ${post.img ? `<img class="post-img" src="${post.img}" loading="lazy">` : ''}
 
-      ?
+    ${post.text ? `<div class="post-text clamped">${post.text}</div>` : ''}
 
-      `<img
-      class="post-img"
-      src="${post.img}"
-      loading="lazy"
-      >`
-
-      :
-
-      ''
-    }
-
-    ${
-      post.text
-
-      ?
-
-      `<div class="post-text">
-
-      ${post.text}
-
-      </div>`
-
-      :
-
-      ''
-    }
-<div class="hashtags">
-
-  ${
-    extractTags(post.text)
-    .map(tag=>
-
-      `<span class="hashtag">
-      #${tag}
-      </span>`
-
-    )
-    .join('')
-  }
-
-</div>
+    ${hashtags.length ? `
+      <div class="post-hashtags">
+        ${hashtags.map(h => `<button class="post-hashtag" data-tag="${h}">${h}</button>`).join('')}
+      </div>
+    ` : ''}
 
     <div class="post-foot">
-
-  <div class="stat">
-
-    👁️ ${post.views || 0}
-
-  </div>
-
-  <button
-  class="copy-btn"
-  onclick="
-  copyPost(
-    '${channel.username}',
-    '${channel.last_post_id}'
-  )
-  "
-  >
-
-  🔗 Copy
-
-  </button>
-
-</div>
-
+      <div class="stat">👁️ ${post.views || 0}</div>
+      ${badge ? `<div class="sort-badge">${badge}</div>` : ''}
+    </div>
   `;
 
+  // hashtag click → filter
+  card.querySelectorAll('.post-hashtag').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const tag = btn.dataset.tag;
+      // toggle
+      if(activeHashtag === tag){
+        activeHashtag = null;
+        renderTagsBar();
+        applyFilters();
+        return;
+      }
+      activeHashtag = tag;
+      renderTagsBar();
+      applyFilters();
+    });
+  });
+
+  // read more toggle
+  const textEl = card.querySelector('.post-text.clamped');
+  if(textEl){
+    const needsClamp = textEl.scrollHeight > textEl.clientHeight + 5;
+    if(needsClamp){
+      const btn = document.createElement('span');
+      btn.className = 'read-more';
+      btn.textContent = 'Read more';
+      textEl.after(btn);
+      btn.addEventListener('click', () => {
+        textEl.classList.toggle('clamped');
+        btn.textContent = textEl.classList.contains('clamped') ? 'Read more' : 'Show less';
+      });
+    }
+  }
+
   return card;
-
 }
-
 
 // ─────────────────────────────
 // FETCH
 // ─────────────────────────────
-
 async function fetchOne(channel){
-
-  if(CACHE.has(channel.username)){
-
-    return CACHE.get(
-      channel.username
-    );
-
-  }
+  if(CACHE.has(channel.username)) return CACHE.get(channel.username);
 
   try{
+    const res = await fetch(WORKER + channel.username, { signal: AbortSignal.timeout(4000) });
+    const html = await res.text();
+    const post = parseLastPost(html);
 
-    const res =
-    await fetch(
+    const lower = ((post?.text || '') + ' ' + (channel.title || '')).toLowerCase();
+    if(NSFW_WORDS.some(w => lower.includes(w))) return null;
 
-      WORKER +
-      channel.username,
+    if(!post || (!post.text && !post.img)) return null;
 
-      {
-        signal:
-        AbortSignal.timeout(4000)
-      }
+    const lang = detectLang(post.text || '');
+    if(activeLang !== 'all' && lang !== activeLang) return null;
 
-    );
-
-    const html =
-    await res.text();
-
-    const post =
-    parseLastPost(html);
-
-const lower = (
-
-  (
-    post?.text || ''
-  )
-
-  +
-
-  ' '
-
-  +
-
-  (
-    channel.title || ''
-  )
-
-).toLowerCase();
-
-const blocked =
-NSFW_WORDS.some(
-word =>
-lower.includes(word)
-);
-
-if(blocked){
-
-  return null;
-
-}
-    
-
-    if(
-      !post
-      ||
-      (
-        !post.text
-        &&
-        !post.img
-      )
-    ){
-
-      return null;
-
+    channel.lastText = (post.text || '').replace(/<[^>]*>/g,'');
+    channel.lastViews = parseViews(post.views);
+    // fallback: لو مفيش last_post_timestamp في الـ JSON، نحاول من التاريخ
+    if(!channel.last_post_timestamp && post.date){
+      channel.last_post_timestamp = new Date(post.date).getTime() / 1000;
     }
 
-    const lang =
-    detectLang(
-      post.text || ''
-    );
-
-    if(
-
-      activeLang !== 'all'
-
-      &&
-
-      lang !== activeLang
-
-    ){
-
-      return null;
-
-    }
-
-    channel.lastText =
-    (post.text || '')
-    .replace(/<[^>]*>/g,'');
-
-    channel.lastViews =
-    parseInt(
-
-      (post.views || '0')
-      .replace(/[^\d]/g,'')
-
-    ) || 0;
-
-    const result = {
-
-      channel,
-      post
-
-    };
-
-    CACHE.set(
-      channel.username,
-      result
-    );
-
+    const result = { channel, post };
+    CACHE.set(channel.username, result);
     return result;
-
   }catch(e){
-
     return null;
-
   }
-
 }
 
-
 // ─────────────────────────────
-// LOAD
+// LOAD BATCH
 // ─────────────────────────────
-
 async function loadBatch(){
-
-  if(
-    isLoading
-    ||
-    poolIndex >= pool.length
-  ){
-    return;
-  }
-
+  if(isLoading || poolIndex >= pool.length) return;
   isLoading = true;
 
-  const slice =
-  pool.slice(
-    poolIndex,
-    poolIndex + BATCH
-  );
-
+  const slice = pool.slice(poolIndex, poolIndex + BATCH);
   poolIndex += BATCH;
 
-  const fragment =
-  document.createDocumentFragment();
+  const fragment = document.createDocumentFragment();
 
-  for(
-
-    let i = 0;
-
-    i < slice.length;
-
-    i += CONCURRENT
-
-  ){
-
-    const group =
-    slice.slice(
-      i,
-      i + CONCURRENT
-    );
-
-    const results =
-    await Promise.allSettled(
-
-      group.map(
-        ch => fetchOne(ch)
-      )
-
-    );
-
+  for(let i = 0; i < slice.length; i += CONCURRENT){
+    const group = slice.slice(i, i + CONCURRENT);
+    const results = await Promise.allSettled(group.map(ch => fetchOne(ch)));
     results.forEach(r => {
-
-      if(
-
-        r.status === 'fulfilled'
-
-        &&
-
-        r.value
-
-      ){
-
-        fragment.appendChild(
-
-          makeCard(
-            r.value.channel,
-            r.value.post
-          )
-
-        );
-
+      if(r.status === 'fulfilled' && r.value){
+        fragment.appendChild(makeCard(r.value.channel, r.value.post));
       }
-
     });
-
   }
 
-  document
-  .getElementById('feed')
-  .appendChild(fragment);
-
+  document.getElementById('feed').appendChild(fragment);
   isLoading = false;
 
+  // لو views sort وعندنا داتا دلوقتي، نعيد الترتيب
+  if(activeSort === 'trending' || activeSort === 'fastgrowing' || activeSort === 'hiddengems'){
+    // مش بنعيد كل حاجة بس بنخلي الباتشات الجاية متحسنة
+  }
 }
-
 
 // ─────────────────────────────
 // SORT
 // ─────────────────────────────
-
 function buildPool(){
-
-  let list =
-  allChannels.filter(ch =>
-
-    ch.username
-
-    &&
-
-    matchSearch(
-      ch,
-      searchQ
-    )
-
+  let list = allChannels.filter(ch =>
+    ch.username && matchSearch(ch, searchQ) && matchHashtag(ch)
   );
 
-if(activeSort === 'newest'){
+  if(activeSort === 'trending'){
+    // للقنوات اللي فيها داتا في الـ JSON: sort فوري
+    // للباقي: sort بناءً على last_post_timestamp + views من الـ JSON
+    list.sort((a,b) => {
+      const aV = (a.last_post_views || a.lastViews || 0);
+      const bV = (b.last_post_views || b.lastViews || 0);
+      const aTs = a.last_post_timestamp || 0;
+      const bTs = b.last_post_timestamp || 0;
+      const ageA = aTs ? Math.max(0, (Date.now()/1000 - aTs)/3600) : 9999;
+      const ageB = bTs ? Math.max(0, (Date.now()/1000 - bTs)/3600) : 9999;
+      const decayA = 1 / (1 + ageA/24);
+      const decayB = 1 / (1 + ageB/24);
+      return (bV * decayB) - (aV * decayA);
+    });
+  }
 
-  list.sort((a,b)=>{
+  if(activeSort === 'newest'){
+    list.sort((a,b) => (b.last_post_timestamp||0) - (a.last_post_timestamp||0));
+  }
 
-    const aScore =
+  if(activeSort === 'biggest'){
+    list.sort((a,b) => (b.subscribers||0) - (a.subscribers||0));
+  }
 
-      (a.last_post_timestamp || 0)
+  if(activeSort === 'fastgrowing'){
+    list.sort((a,b) => {
+      const aV = a.last_post_views || a.lastViews || 0;
+      const bV = b.last_post_views || b.lastViews || 0;
+      const aR = aV / Math.max(a.subscribers||1, 1);
+      const bR = bV / Math.max(b.subscribers||1, 1);
+      return bR - aR;
+    });
+  }
 
-      +
-
-      Math.random() * 86400000;
-
-    const bScore =
-
-      (b.last_post_timestamp || 0)
-
-      +
-
-      Math.random() * 86400000;
-
-    return bScore - aScore;
-
-  });
-
-}
-  
+  if(activeSort === 'hiddengems'){
+    list.sort((a,b) => {
+      const aS = a.subscribers||1, bS = b.subscribers||1;
+      const aV = a.last_post_views||a.lastViews||0;
+      const bV = b.last_post_views||b.lastViews||0;
+      const aScore = (aS < 50000) ? aV / Math.log(aS+2) : 0;
+      const bScore = (bS < 50000) ? bV / Math.log(bS+2) : 0;
+      return bScore - aScore;
+    });
+  }
 
   if(activeSort === 'az'){
-
-    list.sort(
-
-      (a,b)=>
-
-      (a.title || a.username)
-      .localeCompare(
-        b.title || b.username
-      )
-
-    );
-
+    list.sort((a,b) => (a.title||a.username).localeCompare(b.title||b.username));
   }
 
   if(activeSort === 'random'){
-
-    list =
-    list.sort(
-      ()=>Math.random()-.5
-    );
-
-  }
-
-if(activeSort === 'biggest'){
-
-  list.sort(
-
-    (a,b)=>
-
-    (b.subscribers || 0)
-
-    -
-
-    (a.subscribers || 0)
-
-  );
-
-}
-
-if(activeSort === 'growing'){
-
-  list.sort((a,b)=>{
-
-    const aRate =
-
-      (a.last_post_views || 0)
-
-      /
-
-      Math.max(
-        a.subscribers || 1,
-        1
-      );
-
-    const bRate =
-
-      (b.last_post_views || 0)
-
-      /
-
-      Math.max(
-        b.subscribers || 1,
-        1
-      );
-
-    return bRate - aRate;
-
-  });
-
-}
-
-if(activeSort === 'gems'){
-
-  list = list.filter(
-
-    ch=>
-
-    (ch.subscribers || 0)
-    < 50000
-
-  );
-
-}
-
-  if(activeSort === 'views'){
-
-    list.sort(
-
-      (a,b)=>
-
-      (b.lastViews || 0)
-
-      -
-
-      (a.lastViews || 0)
-
-    );
-
+    list = list.sort(() => Math.random()-.5);
   }
 
   pool = list;
-
 }
 
+// ─────────────────────────────
+// TAGS BAR
+// ─────────────────────────────
+function renderTagsBar(){
+  const bar = document.getElementById('tagsBar');
+  bar.innerHTML = '';
+
+  // زر All
+  const allBtn = document.createElement('span');
+  allBtn.className = 'tag' + (activeHashtag === null ? ' active' : '');
+  allBtn.textContent = '✨ All';
+  allBtn.addEventListener('click', () => {
+    activeHashtag = null;
+    renderTagsBar();
+    applyFilters();
+  });
+  bar.appendChild(allBtn);
+
+  // كاتيجوريز
+  HASHTAG_CATEGORIES.forEach(cat => {
+    const t = document.createElement('span');
+    t.className = 'tag' + (activeHashtag === cat.label ? ' active' : '');
+    t.textContent = cat.label;
+    t.addEventListener('click', () => {
+      activeHashtag = activeHashtag === cat.label ? null : cat.label;
+      renderTagsBar();
+      applyFilters();
+    });
+    bar.appendChild(t);
+  });
+}
 
 // ─────────────────────────────
-// INIT
+// INIT / APPLY
 // ─────────────────────────────
-
 function initFeed(){
-
   poolIndex = 0;
-
-  document
-  .getElementById('feed')
-  .innerHTML = '';
-
+  document.getElementById('feed').innerHTML = '';
   loadBatch();
-
 }
-
-
-// ─────────────────────────────
-// APPLY
-// ─────────────────────────────
 
 function applyFilters(){
-
   buildPool();
-
   initFeed();
-
 }
-
 
 // ─────────────────────────────
 // EVENTS
 // ─────────────────────────────
-
-document
-.getElementById('search')
-.addEventListener('input',e=>{
-
-  searchQ =
-  e.target.value
-  .toLowerCase()
-  .trim();
-
+document.getElementById('search').addEventListener('input', e => {
+  searchQ = e.target.value.toLowerCase().trim();
   applyFilters();
-
 });
 
-document
-.getElementById('sortSelect')
-.addEventListener('change',e=>{
-
-  activeSort =
-  e.target.value;
-
+document.getElementById('sortSelect').addEventListener('change', e => {
+  activeSort = e.target.value;
   applyFilters();
-
 });
 
-document
-.getElementById('langSelect')
-.addEventListener('change',e=>{
-
-  activeLang =
-  e.target.value;
-
+document.getElementById('langSelect').addEventListener('change', e => {
+  activeLang = e.target.value;
   applyFilters();
-
 });
 
-
-// ─────────────────────────────
-// SCROLL
-// ─────────────────────────────
-
-window.addEventListener('scroll',()=>{
-
-  if(
-
-    window.innerHeight
-    +
-    window.scrollY
-
-    >=
-
-    document.body.offsetHeight
-    - 1800
-
-  ){
-
+window.addEventListener('scroll', () => {
+  if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 1800){
     loadBatch();
-
   }
-
 });
-
 
 // ─────────────────────────────
 // BOOT
 // ─────────────────────────────
-
-function copyPost(username,id){
-
-  const url =
-  `https://t.me/${username}/${id}`;
-
-  navigator.clipboard.writeText(url);
-
-  alert('Copied');
-
-}
-
-function extractTags(text){
-
-  if(!text){
-    return [];
-  }
-
-  const clean =
-  text
-  .replace(/<[^>]*>/g,'')
-  .toLowerCase();
-
-  const map = {
-
-    Tech:[
-      'ai',
-      'python',
-      'android',
-      'coding'
-    ],
-
-    Crypto:[
-      'bitcoin',
-      'crypto',
-      'btc'
-    ],
-
-    Games:[
-      'pubg',
-      'gaming',
-      'ps5'
-    ],
-
-    Movies:[
-      'movie',
-      'film',
-      'netflix'
-    ],
-
-    Sports:[
-      'football',
-      'soccer',
-      'fifa'
-    ]
-
-  };
-
-  const found = [];
-
-  Object.entries(map)
-  .forEach(([tag,words])=>{
-
-    if(
-      words.some(
-        w=>clean.includes(w)
-      )
-    ){
-
-      found.push(tag);
-
-    }
-
-  });
-
-  return found.slice(0,3);
-
-}
-
 async function boot(){
-
   try{
-
-    const r =
-    await fetch(
-      './channels_data.json'
-    );
-
-    allChannels =
-    await r.json();
-
-    allChannels =
-    allChannels.filter(
-      c=>c.username
-    );
-
+    const r = await fetch('./channels_data.json');
+    allChannels = await r.json();
+    allChannels = allChannels.filter(c => c.username);
   }catch(e){
-
     allChannels = [];
-
   }
 
-  document
-  .getElementById('langSelect')
-  .value = 'arabic';
+  // defaults
+  document.getElementById('langSelect').value = 'arabic';
+  document.getElementById('sortSelect').value = 'trending';
 
-  document
-  .getElementById('sortSelect')
-  .value = 'newest';
-
+  renderTagsBar();
   applyFilters();
-
 }
 
 boot();
 
-</script>    
-    
-
-  
+</script>
 </body>
 </html>
