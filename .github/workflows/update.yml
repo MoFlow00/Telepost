@@ -15,36 +15,90 @@ jobs:
 
     steps:
 
+      # ─────────────────────────────
+      # CHECKOUT
+      # ─────────────────────────────
+
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ─────────────────────────────
+      # PYTHON
+      # ─────────────────────────────
+
       - name: Setup Python
         uses: actions/setup-python@v5
+
         with:
           python-version: "3.11"
 
+      # ─────────────────────────────
+      # INSTALL DEPENDENCIES
+      # ─────────────────────────────
+
       - name: Install dependencies
+
         run: |
+
           pip install requests beautifulsoup4
 
+      # ─────────────────────────────
+      # RUN SCRIPT
+      # ─────────────────────────────
+
       - name: Run updater
+
         run: |
+
           python update_channels.py
 
-      - name: Commit changes
+      # ─────────────────────────────
+      # GIT CONFIG
+      # ─────────────────────────────
+
+      - name: Git config
+
         run: |
 
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          git add .
+      # ─────────────────────────────
+      # STAGE FILES
+      # ─────────────────────────────
 
-          git commit -m "Update channels data" || echo "No changes"
+      - name: Stage changes
+
+        run: |
+
+          git add channels_data.json
+
+      # ─────────────────────────────
+      # COMMIT
+      # ─────────────────────────────
+
+      - name: Commit changes
+
+        run: |
+
+          git commit -m "Auto update channels $(date)" || echo "No changes"
+
+      # ─────────────────────────────
+      # PULL LATEST
+      # ─────────────────────────────
 
       - name: Pull latest changes
+
         run: |
+
           git pull origin main --rebase
 
+      # ─────────────────────────────
+      # PUSH
+      # ─────────────────────────────
+
       - name: Push changes
+
         run: |
+
           git push
