@@ -6,6 +6,52 @@
 <title>TELEPOSTS</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+
+.copy-btn{
+  margin-left:auto;
+  border:none;
+  background:var(--tag-bg);
+  color:var(--text);
+  border-radius:999px;
+  padding:7px 12px;
+  cursor:pointer;
+  font-size:12px;
+}
+  
+
+.sections{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  padding:12px;
+  position:sticky;
+  top:100px;
+  z-index:997;
+  background:var(--bg);
+}
+
+.sections::-webkit-scrollbar{
+  display:none;
+}
+
+.section-btn{
+  border:none;
+  background:var(--tag-bg);
+  color:var(--text);
+  padding:10px 14px;
+  border-radius:999px;
+  font-size:13px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.section-btn.active{
+  background:var(--accent);
+  color:white;
+}
+
+
+  
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --bg:#f5f7fb;--surface:#fff;--border:#e5e9f0;
@@ -200,6 +246,31 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <div class="tags-bar" id="tagsBar"></div>
 
+<div class="sections">
+
+  <button class="section-btn active" data-section="trending">
+    🔥 Trending
+  </button>
+
+  <button class="section-btn" data-section="latest">
+    🕒 Latest
+  </button>
+
+  <button class="section-btn" data-section="growing">
+    🚀 Growing
+  </button>
+
+  <button class="section-btn" data-section="biggest">
+    👑 Biggest
+  </button>
+
+  <button class="section-btn" data-section="gems">
+    💎 Gems
+  </button>
+
+</div>
+
+  
 <div class="feed" id="feed">
   <div id="sentinel"></div>
 </div>
@@ -211,6 +282,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <!-- لحد boot(); -->
 
 <script>
+
+  function copyPostLink(username){
+
+  const url =
+  `https://t.me/${username}`;
+
+  navigator.clipboard.writeText(url);
+
+}
 
 const WORKER =
 'https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=';
@@ -267,6 +347,9 @@ let searchQ = '';
 let activeLang = 'arabic';
 
 let activeSort = 'newest';
+
+let activeSection = 'trending';
+  
 
 
 // ─────────────────────────────
@@ -594,15 +677,24 @@ function makeCard(channel,post){
 
     }
 
-    <div class="post-foot">
+   <div class="post-foot">
 
-      <div class="stat">
+  <div class="stat">
+    👁️ ${post.views || 0}
+  </div>
 
-        👁️ ${post.views || 0}
+  <div class="stat">
+    👥 ${channel.subscribers || 0}
+  </div>
 
-      </div>
+  <button
+  class="copy-btn"
+  onclick="copyPostLink('${channel.username}')"
+  >
+    🔗 Copy
+  </button>
 
-    </div>
+</div>
 
   `;
 
@@ -853,76 +945,157 @@ function buildPool(){
 
   );
 
-if(activeSort === 'newest'){
+  // TRENDING
 
-  list.sort((a,b)=>{
+  if(activeSection === 'trending'){
 
-    const aScore =
+    list.sort((a,b)=>{
 
-      (a.last_post_timestamp || 0)
+      const aScore =
 
-      +
+        ((a.last_post_views || 0) * 3)
 
-      Math.random() * 86400000;
+        +
 
-    const bScore =
+        ((a.subscribers || 0) * 0.15)
+
+        +
+
+        ((a.last_post_timestamp || 0) / 100000);
+
+      const bScore =
+
+        ((b.last_post_views || 0) * 3)
+
+        +
+
+        ((b.subscribers || 0) * 0.15)
+
+        +
+
+        ((b.last_post_timestamp || 0) / 100000);
+
+      return bScore - aScore;
+
+    });
+
+  }
+
+  // LATEST
+
+  if(activeSection === 'latest'){
+
+    list.sort(
+
+      (a,b)=>
 
       (b.last_post_timestamp || 0)
 
-      +
+      -
 
-      Math.random() * 86400000;
-
-    return bScore - aScore;
-
-  });
-
-}
-  
-
-  if(activeSort === 'az'){
-
-    list.sort(
-
-      (a,b)=>
-
-      (a.title || a.username)
-      .localeCompare(
-        b.title || b.username
-      )
+      (a.last_post_timestamp || 0)
 
     );
 
   }
 
-  if(activeSort === 'random'){
+  // BIGGEST
 
-    list =
-    list.sort(
-      ()=>Math.random()-.5
-    );
-
-  }
-
-  if(activeSort === 'views'){
+  if(activeSection === 'biggest'){
 
     list.sort(
 
       (a,b)=>
 
-      (b.lastViews || 0)
+      (b.subscribers || 0)
 
       -
 
-      (a.lastViews || 0)
+      (a.subscribers || 0)
 
     );
+
+  }
+
+  // GROWING
+
+  if(activeSection === 'growing'){
+
+    list.sort((a,b)=>{
+
+      const aGrowth =
+
+        (a.last_post_views || 0)
+
+        /
+
+        Math.max(
+          a.subscribers || 1,
+          1
+        );
+
+      const bGrowth =
+
+        (b.last_post_views || 0)
+
+        /
+
+        Math.max(
+          b.subscribers || 1,
+          1
+        );
+
+      return bGrowth - aGrowth;
+
+    });
+
+  }
+
+  // HIDDEN GEMS
+
+  if(activeSection === 'gems'){
+
+    list = list.filter(ch=>
+
+      (ch.subscribers || 0) < 50000
+
+    );
+
+    list.sort((a,b)=>{
+
+      const aGem =
+
+        (a.last_post_views || 0)
+
+        /
+
+        Math.max(
+          a.subscribers || 1,
+          1
+        );
+
+      const bGem =
+
+        (b.last_post_views || 0)
+
+        /
+
+        Math.max(
+          b.subscribers || 1,
+          1
+        );
+
+      return bGem - aGem;
+
+    });
 
   }
 
   pool = list;
 
 }
+
+  
 
 
 // ─────────────────────────────
@@ -991,6 +1164,30 @@ document
   e.target.value;
 
   applyFilters();
+
+});
+
+
+  document
+.querySelectorAll('.section-btn')
+.forEach(btn=>{
+
+  btn.addEventListener('click',()=>{
+
+    document
+    .querySelectorAll('.section-btn')
+    .forEach(b=>
+      b.classList.remove('active')
+    );
+
+    btn.classList.add('active');
+
+    activeSection =
+    btn.dataset.section;
+
+    applyFilters();
+
+  });
 
 });
 
