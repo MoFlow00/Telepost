@@ -132,13 +132,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <option value="az">🔤 A-Z</option>
   </select>
   <select id="langSelect" class="select">
+    <option value="all">🌍 All</option>
     <option value="arabic">🇸🇦 AR</option>
     <option value="english">🇺🇸 EN</option>
-    <option value="russian">🇷🇺 RU</option>
-    <option value="turkish">🇹🇷 TR</option>
-    <option value="persian">🇮🇷 FA</option>
     <option value="other">🔡 Other</option>
-    <option value="all">🌍 All</option>
   </select>
 </header>
 
@@ -184,7 +181,7 @@ const state = {
   }
 };
 
-const refreshSeed = Math.floor(Date.now() / 30000);
+const refreshSeed = Math.floor(Date.now() / 5000);
 
 function shuffleSeeded(array){
 
@@ -451,6 +448,29 @@ function buildPool(){
       return true;
     }
 
+    const title =
+    (ch.title || '')
+    .toLowerCase();
+
+    const username =
+    (ch.username || '')
+    .toLowerCase();
+
+    const postsText =
+
+      Array.isArray(ch.last_posts_text)
+
+      ?
+
+      ch.last_posts_text.join(' ')
+
+      :
+
+      (ch.last_posts_text || '');
+
+    const text =
+    postsText.toLowerCase();
+
     return (
 
       (ch.title || '')
@@ -462,6 +482,10 @@ function buildPool(){
       (ch.username || '')
       .toLowerCase()
       .includes(q)
+
+      ||
+
+      text.includes(q)
 
     );
 
@@ -476,12 +500,18 @@ function buildPool(){
       calculateTrendingScore(ch)
     }))
     .filter(ch => ch.score > 0)
-    .sort((a,b)=>b.score-a.score);
 
-    const top = list.slice(0,120);
+    const shuffled =
+    shuffleSeeded(list);
 
-    const rest = list.slice(120);
+    shuffled.sort((a,b)=>
+      b.score - a.score
+    );
 
+    const top = shuffled.slice(0,120);
+
+    const rest = shuffled.slice(120);
+    
     list = [
       ...shuffleSeeded(top),
       ...shuffleSeeded(rest)
@@ -499,7 +529,14 @@ function buildPool(){
       )
     );
 
-    list = shuffleSeeded(list);
+    const newestTop = list.slice(0,150);
+
+    const newestRest = list.slice(150);
+
+    list = [
+      ...shuffleSeeded(newestTop),
+      ...shuffleSeeded(newestRest)
+    ];
 
   }
 
