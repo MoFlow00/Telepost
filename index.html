@@ -6,52 +6,6 @@
 <title>TELEPOSTS</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-
-.copy-btn{
-  margin-left:auto;
-  border:none;
-  background:var(--tag-bg);
-  color:var(--text);
-  border-radius:999px;
-  padding:7px 12px;
-  cursor:pointer;
-  font-size:12px;
-}
-  
-
-.sections{
-  display:flex;
-  gap:8px;
-  overflow-x:auto;
-  padding:12px;
-  position:sticky;
-  top:100px;
-  z-index:997;
-  background:var(--bg);
-}
-
-.sections::-webkit-scrollbar{
-  display:none;
-}
-
-.section-btn{
-  border:none;
-  background:var(--tag-bg);
-  color:var(--text);
-  padding:10px 14px;
-  border-radius:999px;
-  font-size:13px;
-  cursor:pointer;
-  white-space:nowrap;
-}
-
-.section-btn.active{
-  background:var(--accent);
-  color:white;
-}
-
-
-  
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --bg:#f5f7fb;--surface:#fff;--border:#e5e9f0;
@@ -233,53 +187,30 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <option value="random">🔀 Random</option>
     <!-- END CHANGE #5 -->
   </select>
+  <select id="langSelect" class="hdr-select">
+    <option value="all">🌍 All</option>
+    <option value="arabic">🇸🇦 AR</option>
+    <option value="english">🇺🇸 EN</option>
+    <option value="russian">🇷🇺 RU</option>
+    <option value="turkish">🇹🇷 TR</option>
+    <option value="persian">🇮🇷 FA</option>
+    <option value="other">🔡 Other</option>
+  </select>
 </header>
 
 <div class="tags-bar" id="tagsBar"></div>
 
-<div class="sections">
-
-  <button class="section-btn active" data-section="trending">
-    🔥 Trending
-  </button>
-
-  <button class="section-btn" data-section="latest">
-    🕒 Latest
-  </button>
-
-  <button class="section-btn" data-section="growing">
-    🚀 Growing
-  </button>
-
-  <button class="section-btn" data-section="biggest">
-    👑 Biggest
-  </button>
-
-  <button class="section-btn" data-section="gems">
-    💎 Gems
-  </button>
-
+<div class="feed" id="feed">
+  <div id="sentinel"></div>
 </div>
-
-  
-<div class="feed" id="feed"></div>
 <div class="spinner-wrap" id="spinnerWrap"><div class="spinner"></div></div>
 
 <!-- IMPORTANT -->
 <!-- فقط استبدل الجزء ده داخل script -->
 <!-- من أول const WORKER -->
 <!-- لحد boot(); -->
+
 <script>
-
-function copyPostLink(username, postId){
-
-const url =
-`https://t.me/${username}/${postId}`;
-
-navigator.clipboard.writeText(url);
-
-showToast('Post link copied');
-}
 
 const WORKER =
 'https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=';
@@ -287,31 +218,6 @@ const WORKER =
 const BATCH = 20;
 
 const CONCURRENT = 12;
-
-function showToast(text){
-
-let toast =
-document.createElement('div');
-
-toast.innerText = text;
-
-toast.style.position='fixed';
-toast.style.bottom='20px';
-toast.style.left='50%';
-toast.style.transform='translateX(-50%)';
-toast.style.background='#111';
-toast.style.color='#fff';
-toast.style.padding='10px 16px';
-toast.style.borderRadius='999px';
-toast.style.zIndex='99999';
-toast.style.fontSize='13px';
-
-document.body.appendChild(toast);
-
-setTimeout(()=>{
-toast.remove();
-},2000);
-}
 
   const NSFW_WORDS = [
 
@@ -334,11 +240,10 @@ toast.remove();
   'نيك',
   'ممحونة',
   'ممحون',
-  'جنس',
-     'الشهوة',
-         'شهواني',
   'اباحي',
-  'شرموطة'
+  'جنس',
+  'شرموطة',
+
   // common domains
 
   'xnxx',
@@ -359,12 +264,9 @@ let isLoading = false;
 
 let searchQ = '';
 
-let activeLang = 'all';
+let activeLang = 'arabic';
 
-
-
-let activeSection = 'trending';
-  
+let activeSort = 'newest';
 
 
 // ─────────────────────────────
@@ -580,21 +482,6 @@ function parseLastPost(html){
 
   }
 
-  let postId = '';
-  const postLinkEl =
-  last.querySelector(
-    '.tgme_widget_message_date'
-  );
-  if (postLinkEl) {
-    const href = postLinkEl.getAttribute('href');
-    const match = href.match(/\/(\d+)\?single/);
-    if (match) {
-      postId = match[1];
-    }
-  }
-
-
-
   return {
 
     text,
@@ -602,48 +489,10 @@ function parseLastPost(html){
     date,
     views
 
-    ,postId
-
   };
 
 }
 
-function extractTags(text){
-
-if(!text) return [];
-
-const clean =
-text
-.replace(/<[^>]*>/g,'')
-.toLowerCase();
-
-const MAP = {
-
-Tech:['ai','python','android','ios','windows','coding','programming'],
-Crypto:['btc','bitcoin','crypto','binance','eth'],
-Movies:['movie','film','netflix','cinema'],
-Games:['pubg','ps5','xbox','gaming'],
-Sports:['football','soccer','fifa','nba'],
-News:['news','breaking','urgent']
-
-};
-
-const found=[];
-
-Object.entries(MAP)
-.forEach(([tag,words])=>{
-if(
-  words.some(
-    w=>clean.includes(w)
-  )
-){
-  found.push(tag);
-}
-});
-
-return found.slice(0,3);
-
-}
 
 // ─────────────────────────────
 // CARD
@@ -702,7 +551,7 @@ function makeCard(channel,post){
       <a
       class="open-btn"
       href="https://t.me/${channel.username}"
-      target="_blank" 
+      target="_blank"
       >
 
       Open
@@ -745,60 +594,15 @@ function makeCard(channel,post){
 
     }
 
-${
-extractTags(post.text)
-.length
+    <div class="post-foot">
 
-?
+      <div class="stat">
 
-`<div style="
- padding:0 14px 12px;
- display:flex;
- gap:8px;
- flex-wrap:wrap;
-">
+        👁️ ${post.views || 0}
 
-${
-extractTags(post.text)
-.map(tag=>`
+      </div>
 
-  <span style="
-    background:var(--tag-bg);
-    padding:5px 10px;
-    border-radius:999px;
-    font-size:11px;
-    color:var(--text2);
-  ">
-    #${tag}
-  </span>
-
-`).join('')
-}
-
-  </div>`
-
-:
-
-''
-}
-   <div class="post-foot">
-
-  <div class="stat">
-    👁️ ${post.views || 0}
-  </div>
-
-  <div class="stat">
-    👥 ${channel.subscribers || 0}
-  </div>
-
-  <button
-  class="copy-btn"
-  onclick="copyPostLink('${channel.username}', '${channel.last_post_id}')"
-  >
-    🔗 Copy
-  </button>
-
-</div>
+    </div>
 
   `;
 
@@ -921,7 +725,6 @@ if(blocked){
     const result = {
 
       channel,
-      
       post
 
     };
@@ -929,7 +732,6 @@ if(blocked){
     CACHE.set(
       channel.username,
       result
-      ,channel.last_post_id = post.postId
     );
 
     return result;
@@ -1022,15 +824,10 @@ async function loadBatch(){
 
   }
 
-  const sentinel =
-  document.getElementById('sentinel');
-
   document
   .getElementById('feed')
-  .insertBefore(
-  fragment,
-  sentinel
-  );
+  .appendChild(fragment);
+
   isLoading = false;
 
 }
@@ -1056,169 +853,76 @@ function buildPool(){
 
   );
 
-  // TRENDING
+if(activeSort === 'newest'){
 
-  if(activeSection === 'trending'){
+  list.sort((a,b)=>{
 
-    list.sort((a,b)=>{
-
-      const aScore = (
-
-        (a.last_post_views || 0) * 3
-
-        +
-
-        (a.last_post_timestamp || 0) / 100000
-
-        )
-        +
-
-        ((a.subscribers || 0) * 0.15)
-
-        +
-
-        ((a.last_post_timestamp || 0) / 100000);
-
-      const bScore =
-
-        ((b.last_post_views || 0) * 3)
-
-        +
-
-        ((b.subscribers || 0) * 0.15)
-
-        +
-
-        ((b.last_post_timestamp || 0) / 100000);
-      return (
-
-      bScore + Math.random()*2000
-
-      )
-
-      *
-
-      (aScore + Math.random()*2000);
-
-    });
-
-  }
-
-  // LATEST
-
-  if(activeSection === 'latest'){
-
-    list.sort(
-
-      (a,b)=>
-
-      (b.last_post_timestamp || 0)
-
-      -
+    const aScore =
 
       (a.last_post_timestamp || 0)
 
-    );
+      +
 
-  }
+      Math.random() * 86400000;
 
-  // BIGGEST
+    const bScore =
 
-  if(activeSection === 'biggest'){
+      (b.last_post_timestamp || 0)
+
+      +
+
+      Math.random() * 86400000;
+
+    return bScore - aScore;
+
+  });
+
+}
+  
+
+  if(activeSort === 'az'){
 
     list.sort(
 
       (a,b)=>
 
-      (b.subscribers || 0)
+      (a.title || a.username)
+      .localeCompare(
+        b.title || b.username
+      )
+
+    );
+
+  }
+
+  if(activeSort === 'random'){
+
+    list =
+    list.sort(
+      ()=>Math.random()-.5
+    );
+
+  }
+
+  if(activeSort === 'views'){
+
+    list.sort(
+
+      (a,b)=>
+
+      (b.lastViews || 0)
 
       -
 
-      (a.subscribers || 0)
+      (a.lastViews || 0)
 
     );
-
-  }
-
-  // GROWING
-
-  if(activeSection === 'growing'){
-
-    list.sort((a,b)=>{
-
-      const aGrowth =
-
-        (a.last_post_views || 0)
-
-        /
-
-        Math.max(
-          a.subscribers || 1,
-          1
-        );
-
-      const bGrowth =
-
-        (b.last_post_views || 0)
-
-        /
-
-        Math.max(
-          b.subscribers || 1,
-          1
-        );
-
-      return bGrowth - aGrowth;
-
-    });
-
-  }
-
-  // HIDDEN GEMS
-
-  if(activeSection === 'gems'){
-
-    list = list.filter(ch=>
-
-      (ch.subscribers || 0) < 50000
-
-    );
-
-    list.sort((a,b)=>{
-
-      const aGem =
-
-        (a.last_post_views || 0)
-
-        /
-
-        Math.max(
-          a.subscribers || 1,
-          1
-        );
-
-      const bGem =
-
-        (b.last_post_views || 0)
-
-        /
-
-        Math.max(
-          b.subscribers || 1,
-          1
-        );
-
-      return bGem - aGem;
-
-    });
 
   }
 
   pool = list;
 
 }
-
-  
 
 
 // ─────────────────────────────
@@ -1228,7 +932,7 @@ function buildPool(){
 function initFeed(){
 
   poolIndex = 0;
-  
+
   document
   .getElementById('feed')
   .innerHTML = '';
@@ -1269,6 +973,17 @@ document
 });
 
 document
+.getElementById('sortSelect')
+.addEventListener('change',e=>{
+
+  activeSort =
+  e.target.value;
+
+  applyFilters();
+
+});
+
+document
 .getElementById('langSelect')
 .addEventListener('change',e=>{
 
@@ -1276,30 +991,6 @@ document
   e.target.value;
 
   applyFilters();
-
-});
-
-
-  document
-.querySelectorAll('.section-btn')
-.forEach(btn=>{
-
-  btn.addEventListener('click',()=>{
-
-    document
-    .querySelectorAll('.section-btn')
-    .forEach(b=>
-      b.classList.remove('active')
-    );
-
-    btn.classList.add('active');
-
-    activeSection =
-    btn.dataset.section;
-
-    applyFilters();
-
-  });
 
 });
 
@@ -1351,6 +1042,10 @@ async function boot(){
       c=>c.username
     );
 
+  }catch(e){
+
+    allChannels = [];
+
   }
 
   document
@@ -1358,13 +1053,12 @@ async function boot(){
   .value = 'arabic';
 
   document
-  .getElementById('langSelect')
-  .value = 'all';
+  .getElementById('sortSelect')
+  .value = 'newest';
 
   applyFilters();
 
 }
-
 
 boot();
 
