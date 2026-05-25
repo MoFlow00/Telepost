@@ -496,7 +496,7 @@ function parseLastPost(html){
   };
 }
 
-  function shuffleArray(arr){
+function shuffleArray(arr){
 
   return arr
   .map(v => ({
@@ -522,6 +522,8 @@ function calculateTrendingScore(channel){
   const ageHours =
   ((Date.now()/1000)-timestamp)/3600;
 
+  // آخر 14 يوم فقط
+
   if(ageHours > 336){
     return 0;
   }
@@ -532,64 +534,6 @@ function calculateTrendingScore(channel){
   const engagement =
   views / subs;
 
-  const randomBoost =
-  Math.random() * 0.25;
-
-  return (
-
-    (views * 0.30)
-
-    +
-
-    (engagement * 7000)
-
-    +
-
-    (freshness * 4000)
-
-    +
-
-    (randomBoost * 1000)
-
-  );
-
-}
-
-function calculateTrendingScore(channel){
-
-  const views =
-  channel.last_post_views || 0;
-
-  const subs =
-  channel.subscribers || 1;
-
-  const timestamp =
-  channel.last_post_timestamp || 0;
-
-  // عمر البوست بالساعات
-
-  const ageHours =
-  ((Date.now()/1000)-timestamp)/3600;
-
-  // لو أقدم من 14 يوم ندفنه
-
-  if(ageHours > 336){
-
-    return 0;
-
-  }
-
-  // freshness تدريجي خلال 14 يوم
-
-  const freshness =
-  1 - (ageHours / 336);
-
-  // engagement
-
-  const engagement =
-  views / subs;
-
-  // random shuffle خفيف ثابت
   const randomBoost =
   Math.random() * 0.25;
 
@@ -636,65 +580,65 @@ function buildPool(){
 
   );
 
-  // LANGUAGE FILTER
+  // اللغة تتجاهل في trending
 
-if(
+  if(
 
-  activeLang !== 'all'
+    activeLang !== 'all'
 
-  &&
+    &&
 
-  activeSort !== 'trending'
+    activeSort !== 'trending'
 
-){
+  ){
 
-  list = list.filter(ch => {
+    list = list.filter(ch => {
 
-    if(!ch.detectedLang){
-      return true;
-    }
+      if(!ch.detectedLang){
+        return true;
+      }
 
-    return (
-      ch.detectedLang
-      ===
-      activeLang
-    );
+      return (
+        ch.detectedLang
+        ===
+        activeLang
+      );
 
-  });
+    });
 
-}
-
-  
+  }
 
   // TRENDING
 
   if(activeSort === 'trending'){
 
-  list = list.filter(ch => {
+    list = list.filter(ch => {
 
-    const ts =
-    ch.last_post_timestamp || 0;
+      const ts =
+      ch.last_post_timestamp || 0;
 
-    const ageHours =
-    ((Date.now()/1000)-ts)/3600;
+      const ageHours =
+      ((Date.now()/1000)-ts)/3600;
 
-    return ageHours <= 336;
+      return ageHours <= 336;
 
-  });
+    });
 
- list = shuffleArray(list);
+    // shuffle خفيف
 
-list.sort((a,b)=>
+    list = shuffleArray(list);
 
-  calculateTrendingScore(b)
+    list.sort((a,b)=>
 
-  -
+      calculateTrendingScore(b)
 
-  calculateTrendingScore(a)
+      -
 
-);
+      calculateTrendingScore(a)
 
-}
+    );
+
+  }
 
   // NEWEST
 
@@ -792,10 +736,6 @@ list.sort((a,b)=>
   pool = list;
 
 }
-
-
-
-  
 
 function makeCard(channel,post){
 
@@ -951,7 +891,7 @@ async function fetchOne(channel){
     const lang =
     detectLang(post.text || '');
 
-channel.detectedLang = lang;
+    channel.detectedLang = lang;
 
     channel.last_post_views =
     parseViews(post.views);
@@ -1058,8 +998,11 @@ function initFeed(){
 }
 
 function applyFilters(){
+
   buildPool();
+
   initFeed();
+
 }
 
 document
@@ -1129,6 +1072,14 @@ async function boot(){
     allChannels = [];
 
   }
+
+  document
+  .getElementById('langSelect')
+  .value = 'arabic';
+
+  document
+  .getElementById('sortSelect')
+  .value = 'trending';
 
   buildPool();
 
