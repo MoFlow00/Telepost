@@ -11,7 +11,7 @@
   --bg:#f5f7fb;--surface:#fff;--border:#e5e9f0;
   --text:#111;--text2:#555;--text3:#9ca3af;
   --accent:#0095f6;--tag-bg:#eef2f7;
-  --header-h:54px;--tags-h:46px;
+  --header-h:54px;
 }
 @media(prefers-color-scheme:dark){
   :root{
@@ -55,22 +55,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 }
 .hdr-select:focus{border-color:var(--accent)}
 
-.tags-bar{
-  position:sticky;top:var(--header-h);z-index:998;
-  background:var(--surface);border-bottom:1px solid var(--border);
-  height:var(--tags-h);
-  display:flex;align-items:center;gap:6px;
-  padding:0 12px;overflow-x:auto;scrollbar-width:none;
+/* refresh btn */
+.refresh-btn{
+  width:34px;height:34px;border-radius:50%;
+  border:1.5px solid var(--border);background:var(--tag-bg);
+  color:var(--text2);cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;font-size:16px;
 }
-.tags-bar::-webkit-scrollbar{display:none}
-.tag{
-  flex-shrink:0;padding:5px 13px;border-radius:22px;
-  font-size:12px;font-weight:500;cursor:pointer;
-  background:var(--tag-bg);color:var(--text2);
-  border:1.5px solid transparent;transition:all .15s;white-space:nowrap;
-}
-.tag:hover{border-color:var(--accent);color:var(--accent)}
-.tag.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.refresh-btn:hover{border-color:var(--accent);color:var(--accent)}
+.refresh-btn.spinning svg{animation:spin .6s linear infinite}
 
 .feed{max-width:640px;margin:0 auto;padding:16px 12px 60px;display:flex;flex-direction:column;gap:16px}
 
@@ -121,47 +115,49 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   color:var(--accent);cursor:pointer;display:block;
 }
 
-/* ── HASHTAGS ── */
+/* hashtags on card */
 .post-hashtags{
   display:flex;flex-wrap:wrap;gap:6px;
-  padding:4px 14px 10px;
+  padding:2px 14px 10px;
 }
 .post-hashtag{
-  font-size:12px;color:var(--accent);
+  font-size:11px;color:var(--accent);
   background:rgba(0,149,246,.08);
-  padding:3px 10px;border-radius:22px;
-  cursor:pointer;transition:background .15s;
+  padding:3px 9px;border-radius:22px;
+  cursor:default;
   border:none;font-family:'Inter',sans-serif;
   font-weight:500;
 }
-.post-hashtag:hover{background:rgba(0,149,246,.18)}
 
+/* foot */
 .post-foot{
-  display:flex;align-items:center;gap:14px;
+  display:flex;align-items:center;gap:10px;
   padding:8px 14px 13px;border-top:1px solid var(--border);
 }
 .stat{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text3)}
-.stat svg{width:14px;height:14px;stroke:var(--text3);fill:none;stroke-width:1.8;stroke-linecap:round}
 
-/* sort badge on card */
+/* copy link btn */
+.copy-btn{
+  margin-left:auto;
+  display:flex;align-items:center;gap:5px;
+  padding:5px 11px;border-radius:22px;
+  border:1.5px solid var(--border);background:transparent;
+  color:var(--text3);font-size:11px;font-weight:600;
+  cursor:pointer;font-family:'Inter',sans-serif;
+  transition:all .15s;
+}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+.copy-btn.copied{border-color:#22c55e;color:#22c55e}
+.copy-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0}
+
+/* sort badge */
 .sort-badge{
-  margin-left:auto;font-size:11px;color:var(--text3);
+  font-size:11px;color:var(--text3);
   background:var(--tag-bg);padding:3px 8px;border-radius:10px;
+  white-space:nowrap;
 }
-
-.skeleton{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:20px;overflow:hidden;padding:13px 14px;
-  box-shadow:0 2px 12px rgba(0,0,0,.04);
-}
-.sk{background:var(--tag-bg);border-radius:8px;animation:sk 1.4s ease-in-out infinite}
-@keyframes sk{0%,100%{opacity:1}50%{opacity:.35}}
-.sk-row{display:flex;align-items:center;gap:11px;margin-bottom:12px}
-.sk-circle{width:42px;height:42px;border-radius:50%;flex-shrink:0}
-.sk-img{width:100%;height:180px;border-radius:10px;margin-bottom:10px}
 
 #sentinel{height:1px}
-
 .spinner-wrap{padding:20px;text-align:center;display:none}
 .spinner-wrap.active{display:block}
 .spinner{
@@ -172,8 +168,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   margin:0 auto;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-
 .empty{padding:60px 20px;text-align:center;color:var(--text3);font-size:14px}
+
+/* toast */
+.toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#111;color:#fff;font-size:13px;font-weight:500;
+  padding:10px 20px;border-radius:22px;
+  opacity:0;transition:all .25s;pointer-events:none;z-index:9999;
+  white-space:nowrap;
+}
+@media(prefers-color-scheme:dark){.toast{background:#f0f0f0;color:#111}}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
@@ -202,38 +208,38 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <option value="persian">🇮🇷 FA</option>
     <option value="other">🔡 Other</option>
   </select>
+  <button class="refresh-btn" id="refreshBtn" title="Shuffle & Refresh">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    </svg>
+  </button>
 </header>
 
-<div class="tags-bar" id="tagsBar"></div>
-
-<div class="feed" id="feed">
-  <div id="sentinel"></div>
-</div>
+<div id="toast" class="toast"></div>
+<div class="feed" id="feed"></div>
 <div class="spinner-wrap" id="spinnerWrap"><div class="spinner"></div></div>
 
 <script>
-
 const WORKER = 'https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=';
 const BATCH = 20;
 const CONCURRENT = 12;
 
 const NSFW_WORDS = [
   'porn','xxx','sex','nude','onlyfans','nsfw','escort','adult','camgirl','hentai',
-  'سكس','نيك','ممحونة','ممحون','اباحي','جنس','شرموطة',
-  'xnxx','xvideos','pornhub'
+  'سكس','نيك','ممحونة','ممحون','اباحي','جنس','شرموطة','xnxx','xvideos','pornhub'
 ];
 
-// ── HASHTAGS CONFIG ──
-// اضف هاشتاقات حسب موضوع قنواتك
+// hashtag categories — كل كاتيجوري ليها كلمات مفتاحية للكشف
 const HASHTAG_CATEGORIES = [
-  { label: '📱 تقنية',    tags: ['تقنية','تكنولوجيا','tech','technology','android','iphone','ai','ذكاء اصطناعي'] },
-  { label: '📰 أخبار',    tags: ['أخبار','خبر','news','breaking','عاجل'] },
-  { label: '💰 اقتصاد',   tags: ['اقتصاد','استثمار','بورصة','crypto','bitcoin','عملات'] },
-  { label: '⚽ رياضة',    tags: ['رياضة','كرة','كرة القدم','sport','football','مباراة'] },
-  { label: '🎬 ترفيه',    tags: ['ترفيه','فيلم','مسلسل','movie','series','entertainment'] },
-  { label: '🔬 علوم',     tags: ['علوم','science','space','فضاء','طب','health'] },
-  { label: '📚 تعليم',    tags: ['تعليم','تعلم','education','learn','course','دورة'] },
-  { label: '🌍 سياسة',   tags: ['سياسة','politics','دولي','عالمي'] },
+  { label:'📱 تقنية',  tags:['تقنية','تكنولوجيا','tech','technology','android','iphone','ai','ذكاء اصطناعي','برمجة','هاتف'] },
+  { label:'📰 أخبار',  tags:['أخبار','خبر','news','breaking','عاجل','بيان'] },
+  { label:'💰 اقتصاد', tags:['اقتصاد','استثمار','بورصة','crypto','bitcoin','عملات','سهم','ذهب','دولار'] },
+  { label:'⚽ رياضة',  tags:['رياضة','كرة','football','sport','مباراة','دوري','هدف','فريق'] },
+  { label:'🎬 ترفيه',  tags:['ترفيه','فيلم','مسلسل','movie','series','entertainment','موسيقى','أغنية'] },
+  { label:'🔬 علوم',   tags:['علوم','science','space','فضاء','طب','health','بحث','دراسة'] },
+  { label:'📚 تعليم',  tags:['تعليم','تعلم','education','learn','course','دورة','شهادة','جامعة'] },
+  { label:'🌍 سياسة', tags:['سياسة','politics','دولي','عالمي','حكومة','وزير','رئيس','انتخاب'] },
 ];
 
 const CACHE = new Map();
@@ -244,11 +250,21 @@ let isLoading = false;
 let searchQ = '';
 let activeLang = 'arabic';
 let activeSort = 'trending';
-let activeHashtag = null;
+// shuffle seed per session — يضمن ترتيب مختلف كل مرة يفتح الموقع
+let sessionSeed = Math.random();
 
-// ─────────────────────────────
-// LANGUAGE
-// ─────────────────────────────
+// ── FISHER-YATES shuffle with seed offset ──
+function shuffleArray(arr){
+  const a = [...arr];
+  // نستخدم الـ seed كـ offset بس نكمّل بـ Math.random() عشان مش pseudo-deterministic
+  for(let i = a.length-1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i+1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ── LANGUAGE ──
 function detectLang(text){
   if(!text) return 'other';
   const plain = text.replace(/<[^>]*>/g,'');
@@ -262,169 +278,148 @@ function detectLang(text){
   return 'other';
 }
 
-// ─────────────────────────────
-// HASHTAG DETECTION
-// ─────────────────────────────
+// ── HASHTAG EXTRACTION ──
+// يستخرج هاشتاقات تيليجرام الحقيقية + يكشف الكاتيجوري
 function extractHashtags(text){
   if(!text) return [];
   const plain = text.replace(/<[^>]*>/g,' ');
-  // استخرج هاشتاقات تيليجرام الحقيقية
-  const tgTags = [...plain.matchAll(/#([\u0600-\u06FFa-zA-Z0-9_]+)/g)]
-    .map(m => '#' + m[1]);
-
-  // كشف الكاتيجوري
   const lowerPlain = plain.toLowerCase();
+
+  // هاشتاقات #حقيقية من النص
+  const tgTags = [...plain.matchAll(/#([\u0600-\u06FFa-zA-Z0-9_]{2,})/g)]
+    .map(m => '#'+m[1]).slice(0,3);
+
+  // كاتيجوري من الكلمات المفتاحية
   const catTags = [];
-  HASHTAG_CATEGORIES.forEach(cat => {
-    const hit = cat.tags.some(t => lowerPlain.includes(t.toLowerCase()));
-    if(hit) catTags.push(cat.label);
-  });
-
-  // دمج بدون تكرار، max 4
-  const all = [...new Set([...tgTags.slice(0,3), ...catTags.slice(0,2)])];
-  return all.slice(0,4);
-}
-
-function matchHashtag(ch){
-  if(!activeHashtag) return true;
-  const text = (ch.lastText || '') + ' ' + (ch.title || '');
-  const lowerText = text.toLowerCase();
-  // إيجاد الكاتيجوري اللي اختارها
-  const cat = HASHTAG_CATEGORIES.find(c => c.label === activeHashtag);
-  if(cat){
-    return cat.tags.some(t => lowerText.includes(t.toLowerCase()));
+  for(const cat of HASHTAG_CATEGORIES){
+    if(cat.tags.some(t => lowerPlain.includes(t.toLowerCase()))){
+      catTags.push(cat.label);
+      if(catTags.length >= 2) break;
+    }
   }
-  // لو هاشتاج عادي
-  return lowerText.includes(activeHashtag.replace('#','').toLowerCase());
+
+  return [...new Set([...tgTags, ...catTags])].slice(0,4);
 }
 
-// ─────────────────────────────
-// SEARCH
-// ─────────────────────────────
+// ── SEARCH ──
 function matchSearch(ch,q){
   if(!q) return true;
-  const title = (ch.title || '').toLowerCase();
-  const user = (ch.username || '').toLowerCase();
-  const text = (ch.lastText || '').toLowerCase();
-  return title.includes(q) || user.includes(q) || text.includes(q);
+  return (ch.title||'').toLowerCase().includes(q)
+    || (ch.username||'').toLowerCase().includes(q)
+    || (ch.lastText||'').toLowerCase().includes(q);
 }
 
-// ─────────────────────────────
-// DATE
-// ─────────────────────────────
+// ── DATE ──
 function formatDate(d){
   if(!d) return '';
   try{
-    const dt = new Date(d);
-    const now = new Date();
+    const dt = new Date(d), now = new Date();
     const diff = (now-dt)/1000;
-    if(diff < 60) return 'Just now';
-    if(diff < 3600) return Math.floor(diff/60)+'m ago';
-    if(diff < 86400) return Math.floor(diff/3600)+'h ago';
-    if(diff < 604800) return Math.floor(diff/86400)+'d ago';
+    if(diff<60) return 'Just now';
+    if(diff<3600) return Math.floor(diff/60)+'m ago';
+    if(diff<86400) return Math.floor(diff/3600)+'h ago';
+    if(diff<604800) return Math.floor(diff/86400)+'d ago';
     return dt.toLocaleDateString();
   }catch(e){ return ''; }
 }
 
-// ─────────────────────────────
-// PARSE VIEWS
-// ─────────────────────────────
+// ── PARSE VIEWS ──
 function parseViews(v){
   if(!v) return 0;
   const s = String(v).replace(/,/g,'').trim();
-  if(s.endsWith('K') || s.endsWith('k')) return parseFloat(s)*1000;
-  if(s.endsWith('M') || s.endsWith('m')) return parseFloat(s)*1000000;
-  return parseInt(s.replace(/[^\d]/g,'')) || 0;
+  if(/[Kk]$/.test(s)) return parseFloat(s)*1000;
+  if(/[Mm]$/.test(s)) return parseFloat(s)*1000000;
+  return parseInt(s.replace(/[^\d]/g,''))||0;
 }
 
-// ─────────────────────────────
-// PARSE LAST POST
-// ─────────────────────────────
+// ── PARSE POST ──
 function parseLastPost(html){
   const doc = new DOMParser().parseFromString(html,'text/html');
   const posts = doc.querySelectorAll('.tgme_widget_message_wrap');
   if(!posts.length) return null;
   const last = posts[posts.length-1];
 
-  let text = '';
+  let text='', img=null, date='', views='', postId='';
+
   const textEl = last.querySelector('.tgme_widget_message_text');
   if(textEl) text = textEl.innerHTML.trim();
 
-  let img = null;
   const imgEl = last.querySelector('.tgme_widget_message_photo_wrap');
   if(imgEl){
-    const style = imgEl.getAttribute('style') || '';
-    const match = style.match(/url\(['"]?([^'")]+)['"]?\)/);
-    if(match) img = match[1];
+    const m = (imgEl.getAttribute('style')||'').match(/url\(['"]?([^'")]+)['"]?\)/);
+    if(m) img = m[1];
   }
 
-  let date = '';
   const dateEl = last.querySelector('.tgme_widget_message_date time');
-  if(dateEl) date = dateEl.getAttribute('datetime') || '';
+  if(dateEl) date = dateEl.getAttribute('datetime')||'';
 
-  let views = '';
   const viewEl = last.querySelector('.tgme_widget_message_views');
   if(viewEl) views = viewEl.textContent.trim();
 
-  return { text, img, date, views };
+  // استخرج رقم البوست من الـ data-post attribute
+  const msgEl = last.querySelector('[data-post]');
+  if(msgEl) postId = msgEl.getAttribute('data-post')||'';
+
+  return { text, img, date, views, postId };
 }
 
-// ─────────────────────────────
-// SORT SCORE HELPERS
-// ─────────────────────────────
-function trendingScore(ch){
-  // views * decay بناءً على عمر البوست
-  const views = ch.lastViews || 0;
-  const ts = ch.last_post_timestamp || 0;
-  const ageHours = ts ? Math.max(0, (Date.now()/1000 - ts) / 3600) : 9999;
-  const decay = 1 / (1 + ageHours / 24); // نص القيمة كل 24 ساعة
-  return views * decay;
-}
-
-function fastGrowingScore(ch){
-  // views / subscribers ratio — channels بتعمل views عالية نسبة لحجمها
-  const views = ch.lastViews || 0;
-  const subs = ch.subscribers || 1;
-  return views / subs;
-}
-
-function hiddenGemScore(ch){
-  // subscribers قليلة (< 50k) لكن engagement عالي
-  const subs = ch.subscribers || 1;
-  const views = ch.lastViews || 0;
-  if(subs > 50000) return 0;
-  return views / Math.log(subs + 2);
-}
-
-// ─────────────────────────────
-// SORT BADGE TEXT
-// ─────────────────────────────
+// ── SORT BADGE ──
 function sortBadge(ch){
-  if(activeSort === 'trending'){
-    const v = ch.lastViews || 0;
-    return v > 0 ? '🔥 ' + (v >= 1000 ? (v/1000).toFixed(1)+'K' : v) + ' views' : '';
+  const fmtNum = n => n>=1000 ? (n/1000).toFixed(1)+'K' : n;
+  if(activeSort==='trending'){
+    const v=ch.lastViews||ch.last_post_views||0;
+    return v>0?'🔥 '+fmtNum(v)+' views':'';
   }
-  if(activeSort === 'biggest'){
-    const s = ch.subscribers || 0;
-    return s > 0 ? '👑 ' + (s >= 1000 ? (s/1000).toFixed(1)+'K' : s) + ' subs' : '';
+  if(activeSort==='biggest'){
+    const s=ch.subscribers||0;
+    return s>0?'👑 '+fmtNum(s)+' subs':'';
   }
-  if(activeSort === 'fastgrowing'){
-    const r = fastGrowingScore(ch);
-    return r > 0 ? '🚀 ' + (r*100).toFixed(1)+'% rate' : '';
+  if(activeSort==='fastgrowing'){
+    const v=ch.last_post_views||ch.lastViews||0;
+    const r=(v/Math.max(ch.subscribers||1,1)*100);
+    return r>0?'🚀 '+r.toFixed(1)+'% rate':'';
   }
-  if(activeSort === 'hiddengems'){
-    const s = ch.subscribers || 0;
-    return s > 0 ? '💎 ' + (s >= 1000 ? (s/1000).toFixed(1)+'K' : s) + ' subs' : '';
+  if(activeSort==='hiddengems'){
+    const s=ch.subscribers||0;
+    return s>0?'💎 '+fmtNum(s)+' subs':'';
   }
   return '';
 }
 
-// ─────────────────────────────
-// CARD
-// ─────────────────────────────
+// ── TOAST ──
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+// ── COPY LINK ──
+function copyLink(url){
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(()=>showToast('🔗 Link copied!'));
+  } else {
+    const el = document.createElement('textarea');
+    el.value = url;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast('🔗 Link copied!');
+  }
+}
+
+// ── MAKE CARD ──
 function makeCard(channel, post){
-  const hashtags = extractHashtags(post.text || '');
+  const hashtags = extractHashtags(post.text||'');
   const badge = sortBadge(channel);
+
+  // بناء رابط البوست — لو عندنا postId نوجه للبوست مباشرة
+  const postUrl = post.postId
+    ? 'https://t.me/'+post.postId
+    : 'https://t.me/'+channel.username;
 
   const card = document.createElement('div');
   card.className = 'post-card';
@@ -432,234 +427,162 @@ function makeCard(channel, post){
   card.innerHTML = `
     <div class="post-head">
       <div class="avatar" style="background:linear-gradient(135deg,#0095f6,#7c3aed)">
-        ${(channel.title || channel.username).slice(0,2).toUpperCase()}
+        ${(channel.title||channel.username).slice(0,2).toUpperCase()}
       </div>
       <div class="post-meta">
         <a class="post-channel" href="https://t.me/${channel.username}" target="_blank">
-          ${channel.title || channel.username}
+          ${channel.title||channel.username}
         </a>
         <div class="post-date">${formatDate(post.date)}</div>
       </div>
-      <a class="open-btn" href="https://t.me/${channel.username}" target="_blank">Open</a>
+      <a class="open-btn" href="${postUrl}" target="_blank">Open</a>
     </div>
-
-    ${post.img ? `<img class="post-img" src="${post.img}" loading="lazy">` : ''}
-
-    ${post.text ? `<div class="post-text clamped">${post.text}</div>` : ''}
-
-    ${hashtags.length ? `
+    ${post.img?`<img class="post-img" src="${post.img}" loading="lazy">`:''}
+    ${post.text?`<div class="post-text clamped">${post.text}</div>`:''}
+    ${hashtags.length?`
       <div class="post-hashtags">
-        ${hashtags.map(h => `<button class="post-hashtag" data-tag="${h}">${h}</button>`).join('')}
+        ${hashtags.map(h=>`<span class="post-hashtag">${h}</span>`).join('')}
       </div>
-    ` : ''}
-
+    `:''}
     <div class="post-foot">
-      <div class="stat">👁️ ${post.views || 0}</div>
-      ${badge ? `<div class="sort-badge">${badge}</div>` : ''}
+      <div class="stat">👁️ ${post.views||0}</div>
+      ${badge?`<div class="sort-badge">${badge}</div>`:''}
+      <button class="copy-btn" data-url="${postUrl}">
+        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy
+      </button>
     </div>
   `;
 
-  // hashtag click → filter
-  card.querySelectorAll('.post-hashtag').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      const tag = btn.dataset.tag;
-      // toggle
-      if(activeHashtag === tag){
-        activeHashtag = null;
-        renderTagsBar();
-        applyFilters();
-        return;
-      }
-      activeHashtag = tag;
-      renderTagsBar();
-      applyFilters();
-    });
+  // copy btn
+  card.querySelector('.copy-btn').addEventListener('click', function(){
+    copyLink(this.dataset.url);
+    this.classList.add('copied');
+    this.textContent = '✓ Copied';
+    setTimeout(()=>{ this.classList.remove('copied'); this.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy`; }, 1500);
   });
 
-  // read more toggle
-  const textEl = card.querySelector('.post-text.clamped');
-  if(textEl){
-    const needsClamp = textEl.scrollHeight > textEl.clientHeight + 5;
-    if(needsClamp){
+  // read more
+  setTimeout(()=>{
+    const textEl = card.querySelector('.post-text.clamped');
+    if(textEl && textEl.scrollHeight > textEl.clientHeight+5){
       const btn = document.createElement('span');
       btn.className = 'read-more';
       btn.textContent = 'Read more';
       textEl.after(btn);
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click',()=>{
         textEl.classList.toggle('clamped');
-        btn.textContent = textEl.classList.contains('clamped') ? 'Read more' : 'Show less';
+        btn.textContent = textEl.classList.contains('clamped')?'Read more':'Show less';
       });
     }
-  }
+  },50);
 
   return card;
 }
 
-// ─────────────────────────────
-// FETCH
-// ─────────────────────────────
+// ── FETCH ──
 async function fetchOne(channel){
   if(CACHE.has(channel.username)) return CACHE.get(channel.username);
-
   try{
-    const res = await fetch(WORKER + channel.username, { signal: AbortSignal.timeout(4000) });
+    const res = await fetch(WORKER+channel.username, {signal:AbortSignal.timeout(4000)});
     const html = await res.text();
     const post = parseLastPost(html);
 
-    const lower = ((post?.text || '') + ' ' + (channel.title || '')).toLowerCase();
-    if(NSFW_WORDS.some(w => lower.includes(w))) return null;
+    const lower = ((post?.text||'')+' '+(channel.title||'')).toLowerCase();
+    if(NSFW_WORDS.some(w=>lower.includes(w))) return null;
+    if(!post||(!post.text&&!post.img)) return null;
 
-    if(!post || (!post.text && !post.img)) return null;
+    const lang = detectLang(post.text||'');
+    if(activeLang!=='all' && lang!==activeLang) return null;
 
-    const lang = detectLang(post.text || '');
-    if(activeLang !== 'all' && lang !== activeLang) return null;
-
-    channel.lastText = (post.text || '').replace(/<[^>]*>/g,'');
+    channel.lastText = (post.text||'').replace(/<[^>]*>/g,'');
     channel.lastViews = parseViews(post.views);
-    // fallback: لو مفيش last_post_timestamp في الـ JSON، نحاول من التاريخ
-    if(!channel.last_post_timestamp && post.date){
-      channel.last_post_timestamp = new Date(post.date).getTime() / 1000;
-    }
+    if(!channel.last_post_timestamp && post.date)
+      channel.last_post_timestamp = new Date(post.date).getTime()/1000;
 
-    const result = { channel, post };
+    const result = {channel, post};
     CACHE.set(channel.username, result);
     return result;
-  }catch(e){
-    return null;
-  }
+  }catch(e){ return null; }
 }
 
-// ─────────────────────────────
-// LOAD BATCH
-// ─────────────────────────────
+// ── LOAD BATCH ──
 async function loadBatch(){
-  if(isLoading || poolIndex >= pool.length) return;
+  if(isLoading || poolIndex>=pool.length) return;
   isLoading = true;
 
-  const slice = pool.slice(poolIndex, poolIndex + BATCH);
+  const slice = pool.slice(poolIndex, poolIndex+BATCH);
   poolIndex += BATCH;
 
   const fragment = document.createDocumentFragment();
 
-  for(let i = 0; i < slice.length; i += CONCURRENT){
-    const group = slice.slice(i, i + CONCURRENT);
-    const results = await Promise.allSettled(group.map(ch => fetchOne(ch)));
-    results.forEach(r => {
-      if(r.status === 'fulfilled' && r.value){
+  for(let i=0; i<slice.length; i+=CONCURRENT){
+    const group = slice.slice(i,i+CONCURRENT);
+    const results = await Promise.allSettled(group.map(ch=>fetchOne(ch)));
+    results.forEach(r=>{
+      if(r.status==='fulfilled' && r.value)
         fragment.appendChild(makeCard(r.value.channel, r.value.post));
-      }
     });
   }
 
   document.getElementById('feed').appendChild(fragment);
   isLoading = false;
-
-  // لو views sort وعندنا داتا دلوقتي، نعيد الترتيب
-  if(activeSort === 'trending' || activeSort === 'fastgrowing' || activeSort === 'hiddengems'){
-    // مش بنعيد كل حاجة بس بنخلي الباتشات الجاية متحسنة
-  }
 }
 
-// ─────────────────────────────
-// SORT
-// ─────────────────────────────
+// ── BUILD POOL ──
 function buildPool(){
-  let list = allChannels.filter(ch =>
-    ch.username && matchSearch(ch, searchQ) && matchHashtag(ch)
-  );
+  let list = allChannels.filter(ch => ch.username && matchSearch(ch, searchQ));
 
-  if(activeSort === 'trending'){
-    // للقنوات اللي فيها داتا في الـ JSON: sort فوري
-    // للباقي: sort بناءً على last_post_timestamp + views من الـ JSON
-    list.sort((a,b) => {
-      const aV = (a.last_post_views || a.lastViews || 0);
-      const bV = (b.last_post_views || b.lastViews || 0);
-      const aTs = a.last_post_timestamp || 0;
-      const bTs = b.last_post_timestamp || 0;
-      const ageA = aTs ? Math.max(0, (Date.now()/1000 - aTs)/3600) : 9999;
-      const ageB = bTs ? Math.max(0, (Date.now()/1000 - bTs)/3600) : 9999;
-      const decayA = 1 / (1 + ageA/24);
-      const decayB = 1 / (1 + ageB/24);
-      return (bV * decayB) - (aV * decayA);
+  // shuffle أساسي قبل أي sort — يضمن تنوع في الباتشات المتشابهة
+  list = shuffleArray(list);
+
+  if(activeSort==='trending'){
+    list.sort((a,b)=>{
+      const aV=a.last_post_views||a.lastViews||0, bV=b.last_post_views||b.lastViews||0;
+      const aTs=a.last_post_timestamp||0, bTs=b.last_post_timestamp||0;
+      const ageA=aTs?Math.max(0,(Date.now()/1000-aTs)/3600):9999;
+      const ageB=bTs?Math.max(0,(Date.now()/1000-bTs)/3600):9999;
+      return (bV/(1+ageB/24)) - (aV/(1+ageA/24));
     });
-  }
-
-  if(activeSort === 'newest'){
-    list.sort((a,b) => (b.last_post_timestamp||0) - (a.last_post_timestamp||0));
-  }
-
-  if(activeSort === 'biggest'){
-    list.sort((a,b) => (b.subscribers||0) - (a.subscribers||0));
-  }
-
-  if(activeSort === 'fastgrowing'){
-    list.sort((a,b) => {
-      const aV = a.last_post_views || a.lastViews || 0;
-      const bV = b.last_post_views || b.lastViews || 0;
-      const aR = aV / Math.max(a.subscribers||1, 1);
-      const bR = bV / Math.max(b.subscribers||1, 1);
-      return bR - aR;
+  } else if(activeSort==='newest'){
+    list.sort((a,b)=>(b.last_post_timestamp||0)-(a.last_post_timestamp||0));
+  } else if(activeSort==='biggest'){
+    list.sort((a,b)=>(b.subscribers||0)-(a.subscribers||0));
+  } else if(activeSort==='fastgrowing'){
+    list.sort((a,b)=>{
+      const aR=(a.last_post_views||a.lastViews||0)/Math.max(a.subscribers||1,1);
+      const bR=(b.last_post_views||b.lastViews||0)/Math.max(b.subscribers||1,1);
+      return bR-aR;
     });
-  }
-
-  if(activeSort === 'hiddengems'){
-    list.sort((a,b) => {
-      const aS = a.subscribers||1, bS = b.subscribers||1;
-      const aV = a.last_post_views||a.lastViews||0;
-      const bV = b.last_post_views||b.lastViews||0;
-      const aScore = (aS < 50000) ? aV / Math.log(aS+2) : 0;
-      const bScore = (bS < 50000) ? bV / Math.log(bS+2) : 0;
-      return bScore - aScore;
+  } else if(activeSort==='hiddengems'){
+    list.sort((a,b)=>{
+      const aScore=(a.subscribers||1)<50000?(a.last_post_views||a.lastViews||0)/Math.log((a.subscribers||1)+2):0;
+      const bScore=(b.subscribers||1)<50000?(b.last_post_views||b.lastViews||0)/Math.log((b.subscribers||1)+2):0;
+      return bScore-aScore;
     });
+  } else if(activeSort==='az'){
+    list.sort((a,b)=>(a.title||a.username).localeCompare(b.title||b.username));
   }
-
-  if(activeSort === 'az'){
-    list.sort((a,b) => (a.title||a.username).localeCompare(b.title||b.username));
-  }
-
-  if(activeSort === 'random'){
-    list = list.sort(() => Math.random()-.5);
-  }
+  // random: already shuffled
 
   pool = list;
 }
 
-// ─────────────────────────────
-// TAGS BAR
-// ─────────────────────────────
-function renderTagsBar(){
-  const bar = document.getElementById('tagsBar');
-  bar.innerHTML = '';
-
-  // زر All
-  const allBtn = document.createElement('span');
-  allBtn.className = 'tag' + (activeHashtag === null ? ' active' : '');
-  allBtn.textContent = '✨ All';
-  allBtn.addEventListener('click', () => {
-    activeHashtag = null;
-    renderTagsBar();
-    applyFilters();
-  });
-  bar.appendChild(allBtn);
-
-  // كاتيجوريز
-  HASHTAG_CATEGORIES.forEach(cat => {
-    const t = document.createElement('span');
-    t.className = 'tag' + (activeHashtag === cat.label ? ' active' : '');
-    t.textContent = cat.label;
-    t.addEventListener('click', () => {
-      activeHashtag = activeHashtag === cat.label ? null : cat.label;
-      renderTagsBar();
-      applyFilters();
-    });
-    bar.appendChild(t);
-  });
+// ── REFRESH (shuffle + reload) ──
+function doRefresh(){
+  // seed جديد = ترتيب مختلف تماماً
+  sessionSeed = Math.random();
+  CACHE.clear(); // امسح الكاش عشان نجيب بوستات طازة
+  poolIndex = 0;
+  document.getElementById('feed').innerHTML = '';
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  setTimeout(()=>btn.classList.remove('spinning'), 800);
+  buildPool();
+  loadBatch();
 }
 
-// ─────────────────────────────
-// INIT / APPLY
-// ─────────────────────────────
+// ── INIT / APPLY ──
 function initFeed(){
   poolIndex = 0;
   document.getElementById('feed').innerHTML = '';
@@ -671,52 +594,44 @@ function applyFilters(){
   initFeed();
 }
 
-// ─────────────────────────────
-// EVENTS
-// ─────────────────────────────
-document.getElementById('search').addEventListener('input', e => {
+// ── EVENTS ──
+document.getElementById('search').addEventListener('input',e=>{
   searchQ = e.target.value.toLowerCase().trim();
   applyFilters();
 });
 
-document.getElementById('sortSelect').addEventListener('change', e => {
+document.getElementById('sortSelect').addEventListener('change',e=>{
   activeSort = e.target.value;
   applyFilters();
 });
 
-document.getElementById('langSelect').addEventListener('change', e => {
+document.getElementById('langSelect').addEventListener('change',e=>{
   activeLang = e.target.value;
   applyFilters();
 });
 
-window.addEventListener('scroll', () => {
-  if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 1800){
+document.getElementById('refreshBtn').addEventListener('click', doRefresh);
+
+window.addEventListener('scroll',()=>{
+  if(window.innerHeight+window.scrollY >= document.body.offsetHeight-1800)
     loadBatch();
-  }
 });
 
-// ─────────────────────────────
-// BOOT
-// ─────────────────────────────
+// ── BOOT ──
 async function boot(){
   try{
     const r = await fetch('./channels_data.json');
     allChannels = await r.json();
-    allChannels = allChannels.filter(c => c.username);
-  }catch(e){
-    allChannels = [];
-  }
+    allChannels = allChannels.filter(c=>c.username);
+  }catch(e){ allChannels=[]; }
 
-  // defaults
   document.getElementById('langSelect').value = 'arabic';
   document.getElementById('sortSelect').value = 'trending';
 
-  renderTagsBar();
   applyFilters();
 }
 
 boot();
-
 </script>
 </body>
 </html>
