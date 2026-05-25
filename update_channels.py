@@ -5,12 +5,14 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 
+
 HEADERS = {
     "User-Agent":
     "Mozilla/5.0"
 }
 
 INPUT_FILE = "channels_data.json"
+
 
 # ─────────────────────────────
 # HELPERS
@@ -31,6 +33,7 @@ def parse_number(text):
         )
 
         # 1.2K
+
         if "K" in text:
 
             return int(
@@ -40,6 +43,7 @@ def parse_number(text):
             )
 
         # 2.5M
+
         if "M" in text:
 
             return int(
@@ -71,16 +75,47 @@ def detect_language(text):
 
     text = text.lower()
 
-    # Arabic / Persian
+    # count chars
 
-    if any(
-        '\u0600' <= c <= '\u06FF'
+    arabic_count = sum(
+
+        1
+
         for c in text
-    ):
 
-        # Persian letters
+        if '\u0600' <= c <= '\u06FF'
 
-        persian_letters = [
+    )
+
+    english_count = sum(
+
+        1
+
+        for c in text
+
+        if 'a' <= c <= 'z'
+
+    )
+
+    russian_count = sum(
+
+        1
+
+        for c in text
+
+        if 'а' <= c <= 'я'
+        or
+        c == 'ё'
+
+    )
+
+    persian_count = sum(
+
+        1
+
+        for c in text
+
+        if c in [
             'پ',
             'چ',
             'ژ',
@@ -89,21 +124,40 @@ def detect_language(text):
             'ی'
         ]
 
-        if any(
-            ch in text
-            for ch in persian_letters
-        ):
-            return "persian"
+    )
 
+    # Persian → Other
+
+    if (
+        arabic_count > 15
+        and
+        persian_count > 2
+    ):
+        return "other"
+
+    # Arabic
+
+    if (
+        arabic_count > english_count
+        and
+        arabic_count > russian_count
+        and
+        arabic_count > 15
+    ):
         return "arabic"
 
     # English
 
-    if any(
-        'a' <= c <= 'z'
-        for c in text
+    if (
+        english_count > arabic_count
+        and
+        english_count > russian_count
+        and
+        english_count > 20
     ):
         return "english"
+
+    # Russian + everything else
 
     return "other"
 
@@ -133,10 +187,27 @@ except Exception as e:
 
 
 # ─────────────────────────────
+# KEEP HISTORY
+# ─────────────────────────────
+
+old_channels_map = {
+
+    ch.get("username"): ch
+
+    for ch in channels
+
+    if ch.get("username")
+
+}
+
+
+# ─────────────────────────────
 # UPDATE CHANNELS
 # ─────────────────────────────
 
 total = len(channels)
+
+updated_channels = []
 
 for index, channel in enumerate(channels):
 
@@ -181,6 +252,8 @@ for index, channel in enumerate(channels):
                 r.status_code
             )
 
+            updated_channels.append(channel)
+
             continue
 
         soup = BeautifulSoup(
@@ -203,9 +276,11 @@ for index, channel in enumerate(channels):
                 username
             )
 
+            updated_channels.append(channel)
+
             continue
 
-        # آخر بوستين
+        # last 2 posts
 
         last_posts = posts[-2:]
 
@@ -230,6 +305,8 @@ for index, channel in enumerate(channels):
                 username
             )
 
+            updated_channels.append(channel)
+
             continue
 
         try:
@@ -245,6 +322,8 @@ for index, channel in enumerate(channels):
                 "BAD POST ID:",
                 username
             )
+
+            updated_channels.append(channel)
 
             continue
 
@@ -402,8 +481,6 @@ for index, channel in enumerate(channels):
             combined_text
         )
 
-        # simplify
-
         if language not in [
             "arabic",
             "english"
@@ -442,6 +519,8 @@ for index, channel in enumerate(channels):
             "last_posts_text"
         ] = last_posts_text
 
+        updated_channels.append(channel)
+
         print(
 
             "UPDATED:",
@@ -462,7 +541,7 @@ for index, channel in enumerate(channels):
 
         )
 
-        # avoid telegram rate limit
+        # avoid rate limit
 
         time.sleep(0.7)
 
@@ -473,6 +552,8 @@ for index, channel in enumerate(channels):
             username
         )
 
+        updated_channels.append(channel)
+
         continue
 
     except requests.exceptions.ConnectionError:
@@ -481,6 +562,8 @@ for index, channel in enumerate(channels):
             "CONNECTION ERROR:",
             username
         )
+
+        updated_channels.append(channel)
 
         continue
 
@@ -492,31 +575,76 @@ for index, channel in enumerate(channels):
             e
         )
 
+        updated_channels.append(channel)
+
         continue
 
 
 # ─────────────────────────────
-# REMOVE DEAD CHANNELS
+# CLEAN + MERGE HISTORY
 # ─────────────────────────────
 
-cleaned = []
+merged = []
 
-for ch in channels:
+for ch in updated_channels:
+
+    username = ch.get("username")
+
+    old = old_channels_map.get(
+        username,
+        {}
+    )
+
+    # preserve old data
+
+    if not ch.get("last_posts_text"):
+
+        ch["last_posts_text"] = old.get(
+            "last_posts_text",
+            []
+        )
+
+    if not ch.get("language"):
+
+        ch["language"] = old.get(
+            "language",
+            "other"
+        )
+
+    if not ch.get("subscribers"):
+
+        ch["subscribers"] = old.get(
+            "subscribers",
+            0
+        )
+
+    if not ch.get("last_post_views"):
+
+        ch["last_post_views"] = old.get(
+            "last_post_views",
+            0
+        )
+
+    # remove dead channels
 
     if ch.get(
         "last_post_timestamp",
         0
     ) > 0:
 
-        cleaned.append(ch)
+        merged.append(ch)
 
 print(
+
     "\nREMOVED:",
-    len(channels) - len(cleaned),
+
+    len(updated_channels) - len(merged),
+
     "DEAD CHANNELS"
+
 )
 
-channels = cleaned
+channels = merged
 
 
 # ─────────────────────────────
