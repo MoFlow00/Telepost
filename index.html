@@ -55,17 +55,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 }
 .hdr-select:focus{border-color:var(--accent)}
 
-/* refresh btn */
-.refresh-btn{
-  width:34px;height:34px;border-radius:50%;
-  border:1.5px solid var(--border);background:var(--tag-bg);
-  color:var(--text2);cursor:pointer;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .2s;font-size:16px;
-}
-.refresh-btn:hover{border-color:var(--accent);color:var(--accent)}
-.refresh-btn.spinning svg{animation:spin .6s linear infinite}
-
 .feed{max-width:640px;margin:0 auto;padding:16px 12px 60px;display:flex;flex-direction:column;gap:16px}
 
 .post-card{
@@ -115,7 +104,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   color:var(--accent);cursor:pointer;display:block;
 }
 
-/* hashtags on card */
 .post-hashtags{
   display:flex;flex-wrap:wrap;gap:6px;
   padding:2px 14px 10px;
@@ -129,14 +117,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   font-weight:500;
 }
 
-/* foot */
 .post-foot{
   display:flex;align-items:center;gap:10px;
   padding:8px 14px 13px;border-top:1px solid var(--border);
 }
 .stat{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text3)}
 
-/* copy link btn */
 .copy-btn{
   margin-left:auto;
   display:flex;align-items:center;gap:5px;
@@ -150,7 +136,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .copy-btn.copied{border-color:#22c55e;color:#22c55e}
 .copy-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0}
 
-/* sort badge */
 .sort-badge{
   font-size:11px;color:var(--text3);
   background:var(--tag-bg);padding:3px 8px;border-radius:10px;
@@ -170,7 +155,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty{padding:60px 20px;text-align:center;color:var(--text3);font-size:14px}
 
-/* toast */
 .toast{
   position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
   background:#111;color:#fff;font-size:13px;font-weight:500;
@@ -197,7 +181,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <option value="fastgrowing">🚀 Fast Growing</option>
     <option value="hiddengems">💎 Hidden Gems</option>
     <option value="az">🔤 A–Z</option>
-    <option value="random">🔀 Random</option>
   </select>
   <select id="langSelect" class="hdr-select">
     <option value="all">🌍 All</option>
@@ -208,12 +191,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <option value="persian">🇮🇷 FA</option>
     <option value="other">🔡 Other</option>
   </select>
-  <button class="refresh-btn" id="refreshBtn" title="Shuffle & Refresh">
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-    </svg>
-  </button>
 </header>
 
 <div id="toast" class="toast"></div>
@@ -230,7 +207,6 @@ const NSFW_WORDS = [
   'سكس','نيك','ممحونة','ممحون','اباحي','جنس','شرموطة','xnxx','xvideos','pornhub'
 ];
 
-// hashtag categories — كل كاتيجوري ليها كلمات مفتاحية للكشف
 const HASHTAG_CATEGORIES = [
   { label:'📱 تقنية',  tags:['تقنية','تكنولوجيا','tech','technology','android','iphone','ai','ذكاء اصطناعي','برمجة','هاتف'] },
   { label:'📰 أخبار',  tags:['أخبار','خبر','news','breaking','عاجل','بيان'] },
@@ -250,21 +226,29 @@ let isLoading = false;
 let searchQ = '';
 let activeLang = 'arabic';
 let activeSort = 'trending';
-// shuffle seed per session — يضمن ترتيب مختلف كل مرة يفتح الموقع
-let sessionSeed = Math.random();
+let pageShuffleSalt = Date.now().toString(36) + Math.random().toString(36).slice(2);
 
-// ── FISHER-YATES shuffle with seed offset ──
-function shuffleArray(arr){
-  const a = [...arr];
-  // نستخدم الـ seed كـ offset بس نكمّل بـ Math.random() عشان مش pseudo-deterministic
-  for(let i = a.length-1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i+1));
-    [a[i], a[j]] = [a[j], a[i]];
+function hashString(str){
+  let h = 2166136261;
+  for(let i = 0; i < str.length; i++){
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
   }
-  return a;
+  return h >>> 0;
 }
 
-// ── LANGUAGE ──
+function shuffleScore(channel){
+  return hashString(`${pageShuffleSalt}:${channel.username || channel.title || ''}`);
+}
+
+function shuffleArray(arr){
+  return [...arr].sort((a,b)=>shuffleScore(a)-shuffleScore(b));
+}
+
+function stableTiebreak(a,b){
+  return shuffleScore(a) - shuffleScore(b);
+}
+
 function detectLang(text){
   if(!text) return 'other';
   const plain = text.replace(/<[^>]*>/g,'');
@@ -278,18 +262,14 @@ function detectLang(text){
   return 'other';
 }
 
-// ── HASHTAG EXTRACTION ──
-// يستخرج هاشتاقات تيليجرام الحقيقية + يكشف الكاتيجوري
 function extractHashtags(text){
   if(!text) return [];
   const plain = text.replace(/<[^>]*>/g,' ');
   const lowerPlain = plain.toLowerCase();
 
-  // هاشتاقات #حقيقية من النص
   const tgTags = [...plain.matchAll(/#([\u0600-\u06FFa-zA-Z0-9_]{2,})/g)]
     .map(m => '#'+m[1]).slice(0,3);
 
-  // كاتيجوري من الكلمات المفتاحية
   const catTags = [];
   for(const cat of HASHTAG_CATEGORIES){
     if(cat.tags.some(t => lowerPlain.includes(t.toLowerCase()))){
@@ -301,7 +281,6 @@ function extractHashtags(text){
   return [...new Set([...tgTags, ...catTags])].slice(0,4);
 }
 
-// ── SEARCH ──
 function matchSearch(ch,q){
   if(!q) return true;
   return (ch.title||'').toLowerCase().includes(q)
@@ -309,7 +288,6 @@ function matchSearch(ch,q){
     || (ch.lastText||'').toLowerCase().includes(q);
 }
 
-// ── DATE ──
 function formatDate(d){
   if(!d) return '';
   try{
@@ -323,7 +301,6 @@ function formatDate(d){
   }catch(e){ return ''; }
 }
 
-// ── PARSE VIEWS ──
 function parseViews(v){
   if(!v) return 0;
   const s = String(v).replace(/,/g,'').trim();
@@ -332,7 +309,6 @@ function parseViews(v){
   return parseInt(s.replace(/[^\d]/g,''))||0;
 }
 
-// ── PARSE POST ──
 function parseLastPost(html){
   const doc = new DOMParser().parseFromString(html,'text/html');
   const posts = doc.querySelectorAll('.tgme_widget_message_wrap');
@@ -356,14 +332,12 @@ function parseLastPost(html){
   const viewEl = last.querySelector('.tgme_widget_message_views');
   if(viewEl) views = viewEl.textContent.trim();
 
-  // استخرج رقم البوست من الـ data-post attribute
   const msgEl = last.querySelector('[data-post]');
   if(msgEl) postId = msgEl.getAttribute('data-post')||'';
 
   return { text, img, date, views, postId };
 }
 
-// ── SORT BADGE ──
 function sortBadge(ch){
   const fmtNum = n => n>=1000 ? (n/1000).toFixed(1)+'K' : n;
   if(activeSort==='trending'){
@@ -386,7 +360,6 @@ function sortBadge(ch){
   return '';
 }
 
-// ── TOAST ──
 let toastTimer;
 function showToast(msg){
   const t = document.getElementById('toast');
@@ -396,7 +369,6 @@ function showToast(msg){
   toastTimer = setTimeout(()=>t.classList.remove('show'), 2000);
 }
 
-// ── COPY LINK ──
 function copyLink(url){
   if(navigator.clipboard){
     navigator.clipboard.writeText(url).then(()=>showToast('🔗 Link copied!'));
@@ -411,12 +383,10 @@ function copyLink(url){
   }
 }
 
-// ── MAKE CARD ──
 function makeCard(channel, post){
   const hashtags = extractHashtags(post.text||'');
   const badge = sortBadge(channel);
 
-  // بناء رابط البوست — لو عندنا postId نوجه للبوست مباشرة
   const postUrl = post.postId
     ? 'https://t.me/'+post.postId
     : 'https://t.me/'+channel.username;
@@ -430,12 +400,12 @@ function makeCard(channel, post){
         ${(channel.title||channel.username).slice(0,2).toUpperCase()}
       </div>
       <div class="post-meta">
-        <a class="post-channel" href="https://t.me/${channel.username}" target="_blank">
+        <a class="post-channel" href="https://t.me/${channel.username}" target="_blank" rel="noopener noreferrer">
           ${channel.title||channel.username}
         </a>
         <div class="post-date">${formatDate(post.date)}</div>
       </div>
-      <a class="open-btn" href="${postUrl}" target="_blank">Open</a>
+      <a class="open-btn" href="${postUrl}" target="_blank" rel="noopener noreferrer">Open</a>
     </div>
     ${post.img?`<img class="post-img" src="${post.img}" loading="lazy">`:''}
     ${post.text?`<div class="post-text clamped">${post.text}</div>`:''}
@@ -454,7 +424,6 @@ function makeCard(channel, post){
     </div>
   `;
 
-  // copy btn
   card.querySelector('.copy-btn').addEventListener('click', function(){
     copyLink(this.dataset.url);
     this.classList.add('copied');
@@ -462,7 +431,6 @@ function makeCard(channel, post){
     setTimeout(()=>{ this.classList.remove('copied'); this.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy`; }, 1500);
   });
 
-  // read more
   setTimeout(()=>{
     const textEl = card.querySelector('.post-text.clamped');
     if(textEl && textEl.scrollHeight > textEl.clientHeight+5){
@@ -480,7 +448,6 @@ function makeCard(channel, post){
   return card;
 }
 
-// ── FETCH ──
 async function fetchOne(channel){
   if(CACHE.has(channel.username)) return CACHE.get(channel.username);
   try{
@@ -506,7 +473,6 @@ async function fetchOne(channel){
   }catch(e){ return null; }
 }
 
-// ── LOAD BATCH ──
 async function loadBatch(){
   if(isLoading || poolIndex>=pool.length) return;
   isLoading = true;
@@ -529,11 +495,9 @@ async function loadBatch(){
   isLoading = false;
 }
 
-// ── BUILD POOL ──
 function buildPool(){
   let list = allChannels.filter(ch => ch.username && matchSearch(ch, searchQ));
 
-  // shuffle أساسي قبل أي sort — يضمن تنوع في الباتشات المتشابهة
   list = shuffleArray(list);
 
   if(activeSort==='trending'){
@@ -542,47 +506,32 @@ function buildPool(){
       const aTs=a.last_post_timestamp||0, bTs=b.last_post_timestamp||0;
       const ageA=aTs?Math.max(0,(Date.now()/1000-aTs)/3600):9999;
       const ageB=bTs?Math.max(0,(Date.now()/1000-bTs)/3600):9999;
-      return (bV/(1+ageB/24)) - (aV/(1+ageA/24));
+      const scoreDiff = (bV/(1+ageB/24)) - (aV/(1+ageA/24));
+      return scoreDiff || stableTiebreak(a,b);
     });
   } else if(activeSort==='newest'){
-    list.sort((a,b)=>(b.last_post_timestamp||0)-(a.last_post_timestamp||0));
+    list.sort((a,b)=>((b.last_post_timestamp||0)-(a.last_post_timestamp||0)) || stableTiebreak(a,b));
   } else if(activeSort==='biggest'){
-    list.sort((a,b)=>(b.subscribers||0)-(a.subscribers||0));
+    list.sort((a,b)=>((b.subscribers||0)-(a.subscribers||0)) || stableTiebreak(a,b));
   } else if(activeSort==='fastgrowing'){
     list.sort((a,b)=>{
       const aR=(a.last_post_views||a.lastViews||0)/Math.max(a.subscribers||1,1);
       const bR=(b.last_post_views||b.lastViews||0)/Math.max(b.subscribers||1,1);
-      return bR-aR;
+      return (bR-aR) || stableTiebreak(a,b);
     });
   } else if(activeSort==='hiddengems'){
     list.sort((a,b)=>{
       const aScore=(a.subscribers||1)<50000?(a.last_post_views||a.lastViews||0)/Math.log((a.subscribers||1)+2):0;
       const bScore=(b.subscribers||1)<50000?(b.last_post_views||b.lastViews||0)/Math.log((b.subscribers||1)+2):0;
-      return bScore-aScore;
+      return (bScore-aScore) || stableTiebreak(a,b);
     });
   } else if(activeSort==='az'){
-    list.sort((a,b)=>(a.title||a.username).localeCompare(b.title||b.username));
+    list.sort((a,b)=>(a.title||a.username).localeCompare(b.title||b.username) || stableTiebreak(a,b));
   }
-  // random: already shuffled
 
   pool = list;
 }
 
-// ── REFRESH (shuffle + reload) ──
-function doRefresh(){
-  // seed جديد = ترتيب مختلف تماماً
-  sessionSeed = Math.random();
-  CACHE.clear(); // امسح الكاش عشان نجيب بوستات طازة
-  poolIndex = 0;
-  document.getElementById('feed').innerHTML = '';
-  const btn = document.getElementById('refreshBtn');
-  btn.classList.add('spinning');
-  setTimeout(()=>btn.classList.remove('spinning'), 800);
-  buildPool();
-  loadBatch();
-}
-
-// ── INIT / APPLY ──
 function initFeed(){
   poolIndex = 0;
   document.getElementById('feed').innerHTML = '';
@@ -594,7 +543,6 @@ function applyFilters(){
   initFeed();
 }
 
-// ── EVENTS ──
 document.getElementById('search').addEventListener('input',e=>{
   searchQ = e.target.value.toLowerCase().trim();
   applyFilters();
@@ -607,17 +555,15 @@ document.getElementById('sortSelect').addEventListener('change',e=>{
 
 document.getElementById('langSelect').addEventListener('change',e=>{
   activeLang = e.target.value;
+  CACHE.clear();
   applyFilters();
 });
-
-document.getElementById('refreshBtn').addEventListener('click', doRefresh);
 
 window.addEventListener('scroll',()=>{
   if(window.innerHeight+window.scrollY >= document.body.offsetHeight-1800)
     loadBatch();
 });
 
-// ── BOOT ──
 async function boot(){
   try{
     const r = await fetch('./channels_data.json');
@@ -628,7 +574,8 @@ async function boot(){
   document.getElementById('langSelect').value = 'arabic';
   document.getElementById('sortSelect').value = 'trending';
 
-  applyFilters();
+  buildPool();
+  initFeed();
 }
 
 boot();
