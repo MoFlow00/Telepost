@@ -151,723 +151,854 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   <span id="cacheStats">Cache: 0</span>
 </div>
 
+
 <script>
-/**
- * ⚙️ CONFIGURATION - Optimized for SPEED + Cloudflare Safety
- */
 const CONFIG = {
   WORKER_URL: 'https://telegram-proxy.mohamed-ahmed408408.workers.dev/?channel=',
-  
-  // 🚀 SPEED SETTINGS
-  BATCH_SIZE: 10,              // ↑ More items per batch
-  CONCURRENT_REQUESTS: 6,      // ↑ More parallel requests
-  REQUEST_DELAY: 250,          // ↓ Less delay between batches (was 800)
-  RETRY_ATTEMPTS: 1,           // ↓ Faster failure handling
-  RETRY_DELAY: 500,            // ↓ Less retry delay
-  FETCH_TIMEOUT: 4000,         // ↓ Faster timeout (was 5000)
-  
-  // 💾 CACHE SETTINGS
-  CACHE_TTL: 45 * 60 * 1000,   // ↑ 45 minutes persistent cache
-  MAX_LOCAL_CACHE: 150,        // Max items in localStorage
-  
-  // 📊 TRENDING ALGORITHM
-  TRENDING_WEIGHTS: {
-    views: 0.35,
-    engagement: 0.40,
-    freshness: 0.20,
-    velocity: 0.05
-  },
-  TRENDING_MAX_AGE_HOURS: 72,
-  
-  // 🔞 FILTERS
+
+  BATCH_SIZE: 12,
+  CONCURRENT_REQUESTS: 6,
+  FETCH_TIMEOUT: 4000,
+
+  TRENDING_DAYS: 14,
+
   NSFW_WORDS: [
     'porn','xxx','sex','nude','onlyfans','hentai',
     'سكس','نيك','اباحي','شرموطة','عري'
   ]
 };
 
-/**
- * 🗄️ SmartCache - In-memory with TTL
- */
-class SmartCache {
-  constructor(ttl = CONFIG.CACHE_TTL) {
-    this.cache = new Map();
-    this.ttl = ttl;
-    this.hits = 0;
-    this.misses = 0;
-  }
-  
-  set(key, value) {
-    this.cache.set(key, { value, timestamp: Date.now() });
-  }
-  
-  get(key) {
-    const item = this.cache.get(key);
-    if (!item) { this.misses++; return null; }
-    
-    if (Date.now() - item.timestamp > this.ttl) {
-      this.cache.delete(key);
-      this.misses++;
-      return null;
-    }
-    this.hits++;
-    return item.value;
-  }
-  
-  clear() { this.cache.clear(); }
-  
-  cleanup() {
-    for (const [key, item] of this.cache) {
-      if (Date.now() - item.timestamp > this.ttl) {
-        this.cache.delete(key);
-      }
-    }
-  }
-  
-  getStats() {
-    const total = this.hits + this.misses;
-    return {
-      size: this.cache.size,
-      hitRate: total > 0 ? Math.round((this.hits/total)*100) : 0
-    };
-  }
-}
+const cache = new Map();
 
-/**
- * 💾 LocalStorage Cache - Persistent across sessions
- */
-const StorageCache = {
-  prefix: 'tp_',
-  
-  key(username) { return this.prefix + username; },
-  
-  get(username) {
-    try {
-      const item = localStorage.getItem(this.key(username));
-      if (!item) return null;
-      const parsed = JSON.parse(item);
-      if (Date.now() - parsed.timestamp > CONFIG.CACHE_TTL) {
-        localStorage.removeItem(this.key(username));
-        return null;
-      }
-      return parsed.data;
-    } catch { return null; }
-  },
-  
-  set(username, data) {
-    try {
-      this._enforceLimit();
-      localStorage.setItem(this.key(username), JSON.stringify({
-        data, timestamp: Date.now()
-      }));
-    } catch (e) {
-      if (e.name === 'QuotaExceededError') {
-        this._cleanupOldest(30);
-        try {
-          localStorage.setItem(this.key(username), JSON.stringify({
-            data, timestamp: Date.now()
-          }));
-        } catch {}
-      }
-    }
-  },
-  
-  _enforceLimit() {
-    const keys = Object.keys(localStorage).filter(k => k.startsWith(this.prefix));
-    if (keys.length >= CONFIG.MAX_LOCAL_CACHE) {
-      this._cleanupOldest(keys.length - CONFIG.MAX_LOCAL_CACHE + 10);
-    }
-  },
-  
-  _cleanupOldest(count) {
-    const items = Object.keys(localStorage)
-      .filter(k => k.startsWith(this.prefix))
-      .map(k => ({ key: k, time: JSON.parse(localStorage[k]).timestamp }))
-      .sort((a, b) => a.time - b.time);
-    
-    for (let i = 0; i < count && i < items.length; i++) {
-      localStorage.removeItem(items[i].key);
-    }
-  },
-  
-  clear() {
-    Object.keys(localStorage)
-      .filter(k => k.startsWith(this.prefix))
-      .forEach(k => localStorage.removeItem(k));
-  },
-  
-  getCount() {
-    return Object.keys(localStorage).filter(k => k.startsWith(this.prefix)).length;
-  }
-};
-
-/**
- * 🚦 Rate Limiter Queue - Smart request throttling
- */
-class RequestQueue {
-  constructor(config) {
-    this.queue = [];
-    this.processing = false;
-    this.config = config;
-    this.lastRequestTime = 0;
-    this.activeRequests = 0;
-  }
-  
-  async add(task, priority = 0) {
-    return new Promise((resolve, reject) => {
-      this.queue.push({ task, resolve, reject, priority, added: Date.now() });
-      this.queue.sort((a, b) => b.priority - a.priority);
-      this.process();
-    });
-  }
-  
-  async process() {
-    if (this.processing || this.queue.length === 0) return;
-    this.processing = true;
-    
-    while (this.queue.length > 0 && this.activeRequests < CONFIG.CONCURRENT_REQUESTS) {
-      const now = Date.now();
-      const elapsed = now - this.lastRequestTime;
-      
-      if (elapsed < CONFIG.REQUEST_DELAY) {
-        await this._sleep(CONFIG.REQUEST_DELAY - elapsed);
-      }
-      
-      const { task, resolve, reject } = this.queue.shift();
-      this.activeRequests++;
-      
-      this._executeWithRetry(task)
-        .then(resolve)
-        .catch(reject)
-        .finally(() => {
-          this.activeRequests--;
-          this.lastRequestTime = Date.now();
-          setTimeout(() => this.process(), 50);
-        });
-    }
-    this.processing = false;
-  }
-  
-  async _executeWithRetry(task, attempts = 0) {
-    try {
-      return await task();
-    } catch (error) {
-      if (attempts < CONFIG.RETRY_ATTEMPTS && error.name !== 'AbortError') {
-        await this._sleep(CONFIG.RETRY_DELAY * (attempts + 1));
-        return this._executeWithRetry(task, attempts + 1);
-      }
-      throw error;
-    }
-  }
-  
-  _sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
-  
-  getStats() {
-    return { queued: this.queue.length, active: this.activeRequests };
-  }
-}
-
-/**
- * 🌐 Global Instances
- */
-const cache = new SmartCache();
-const requestQueue = new RequestQueue();
-
-/**
- * 📊 State Management
- */
 const state = {
   allChannels: [],
   filteredPool: [],
   currentIndex: 0,
   isLoading: false,
   hasMore: true,
-  initialized: false,
-  filters: { sort: 'trending', lang: 'arabic', search: '' }
+
+  filters: {
+    sort: 'trending',
+    lang: 'arabic',
+    search: ''
+  }
 };
 
-/**
- * 🔍 Language Detection
- */
-function detectLanguage(text) {
-  if (!text) return 'other';
-  const clean = text.replace(/<[^>]*>/g, '').toLowerCase();
-  if (/[\u0600-\u06FF]/.test(clean)) return /[پگچژکی]/.test(clean) ? 'persian' : 'arabic';
-  if (/[А-Яа-яЁё]/.test(clean)) return 'russian';
-  if (/[şğıüçöİĞŞ]/i.test(clean)) return 'turkish';
-  if (/[a-zA-Z]/.test(clean)) return 'english';
-  return 'other';
+const refreshSeed = Math.floor(Date.now() / 30000);
+
+function shuffleSeeded(array){
+
+  const arr = [...array];
+
+  let seed = refreshSeed;
+
+  function random(){
+
+    seed = (seed * 9301 + 49297) % 233280;
+
+    return seed / 233280;
+
+  }
+
+  for(let i = arr.length - 1; i > 0; i--){
+
+    const j = Math.floor(random() * (i + 1));
+
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+
+  }
+
+  return arr;
+
 }
 
-/**
- * 👁️ Parse Views
- */
-function parseViews(value) {
-  if (!value) return 0;
-  const str = String(value).replace(/,/g, '').trim();
-  if (/K$/i.test(str)) return Math.round(parseFloat(str) * 1000);
-  if (/M$/i.test(str)) return Math.round(parseFloat(str) * 1000000);
-  return parseInt(str.replace(/[^\d]/g, '')) || 0;
+function parseViews(value){
+
+  if(!value) return 0;
+
+  const str = String(value)
+  .replace(/,/g,'')
+  .trim();
+
+  if(/K$/i.test(str)){
+    return Math.round(parseFloat(str) * 1000);
+  }
+
+  if(/M$/i.test(str)){
+    return Math.round(parseFloat(str) * 1000000);
+  }
+
+  return parseInt(
+    str.replace(/[^\d]/g,'')
+  ) || 0;
+
 }
 
-/**
- * 🕐 Format Relative Time
- */
-function formatRelativeTime(dateString) {
-  if (!dateString) return '';
-  try {
+function formatDate(dateString){
+
+  if(!dateString) return '';
+
+  try{
+
     const date = new Date(dateString);
+
     const now = new Date();
-    const seconds = Math.floor((now - date) / 1000);
-    if (seconds < 60) return 'Just now';
-    if (seconds < 3600) return `${Math.floor(seconds/60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds/3600)}h ago`;
-    if (seconds < 604800) return `${Math.floor(seconds/86400)}d ago`;
-    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  } catch { return ''; }
+
+    const diff = (now - date) / 1000;
+
+    if(diff < 60){
+      return 'Just now';
+    }
+
+    if(diff < 3600){
+      return Math.floor(diff / 60) + 'm ago';
+    }
+
+    if(diff < 86400){
+      return Math.floor(diff / 3600) + 'h ago';
+    }
+
+    if(diff < 604800){
+      return Math.floor(diff / 86400) + 'd ago';
+    }
+
+    return date.toLocaleDateString();
+
+  }catch(e){
+
+    return '';
+
+  }
+
 }
 
-/**
- * 📰 Parse Telegram Post
- */
-function parseLastPost(html) {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  const messages = doc.querySelectorAll('.tgme_widget_message_wrap');
-  if (!messages.length) return null;
-  
-  const last = messages[messages.length - 1];
-  const textEl = last.querySelector('.tgme_widget_message_text');
-  const text = textEl?.innerHTML.trim() || '';
-  
+function parseLastPost(html){
+
+  const doc = new DOMParser()
+  .parseFromString(html,'text/html');
+
+  const posts = doc.querySelectorAll(
+    '.tgme_widget_message_wrap'
+  );
+
+  if(!posts.length){
+    return null;
+  }
+
+  const last = posts[posts.length - 1];
+
+  let text = '';
+
+  const textEl = last.querySelector(
+    '.tgme_widget_message_text'
+  );
+
+  if(textEl){
+    text = textEl.innerHTML.trim();
+  }
+
   let image = null;
-  const photoWrap = last.querySelector('.tgme_widget_message_photo_wrap');
-  if (photoWrap) {
-    const style = photoWrap.getAttribute('style') || '';
-    const match = style.match(/url\(['"]?([^'")]+)['"]?\)/);
-    if (match) image = match[1];
+
+  const imageEl = last.querySelector(
+    '.tgme_widget_message_photo_wrap'
+  );
+
+  if(imageEl){
+
+    const style = imageEl.getAttribute('style') || '';
+
+    const match = style.match(
+      /url\(['"]?([^'")]+)['"]?\)/
+    );
+
+    if(match){
+      image = match[1];
+    }
+
   }
-  
-  const dateEl = last.querySelector('.tgme_widget_message_date time');
-  const viewEl = last.querySelector('.tgme_widget_message_views');
-  const postEl = last.querySelector('[data-post]');
-  
+
+  const dateEl = last.querySelector(
+    '.tgme_widget_message_date time'
+  );
+
+  const viewEl = last.querySelector(
+    '.tgme_widget_message_views'
+  );
+
+  const postEl = last.querySelector(
+    '[data-post]'
+  );
+
   return {
-    text, image,
-    date: dateEl?.getAttribute('datetime') || '',
-    views: viewEl?.textContent.trim() || '',
-    postId: postEl?.getAttribute('data-post') || ''
+
+    text,
+
+    image,
+
+    date:
+    dateEl?.getAttribute('datetime') || '',
+
+    views:
+    viewEl?.textContent.trim() || '',
+
+    postId:
+    postEl?.getAttribute('data-post') || ''
+
   };
+
 }
 
-/**
- * 🔥 Trending Score Algorithm (Optimized)
- */
-function calculateTrendingScore(channel) {
-  const { views = 0, subscribers = 1, last_post_timestamp = 0 } = channel;
-  const ageHours = (Date.now()/1000 - last_post_timestamp) / 3600;
-  
-  if (ageHours > CONFIG.TRENDING_MAX_AGE_HOURS) return 0;
-  
-  const freshness = Math.exp(-ageHours / 24);
-  const engagement = subscribers > 0 ? views / subscribers : 0;
-  const velocity = ageHours > 0 ? views / ageHours : views;
-  
-  const { views: w1, engagement: w2, freshness: w3, velocity: w4 } = CONFIG.TRENDING_WEIGHTS;
-  
-  return (Math.log10(views + 1) * 100 * w1) +
-         (engagement * 10000 * w2) +
-         (freshness * 5000 * w3) +
-         (Math.log10(velocity + 1) * 500 * w4);
+function isSafe(channel, post){
+
+  const content = (
+
+    (post.text || '')
+
+    +
+
+    ' '
+
+    +
+
+    (channel.title || '')
+
+  ).toLowerCase();
+
+  return !CONFIG.NSFW_WORDS.some(
+    word => content.includes(word)
+  );
+
 }
 
-/**
- * 🎯 Build Filtered & Sorted Pool
- */
-function buildPool() {
-  const { sort, lang, search } = state.filters;
-  const query = search.toLowerCase();
-  
-  let pool = state.allChannels.filter(ch => {
-    if (!ch.username) return false;
-    if (!query) return true;
-    const title = (ch.title || '').toLowerCase();
-    const username = (ch.username || '').toLowerCase();
-    return title.includes(query) || username.includes(query);
+function calculateTrendingScore(channel){
+
+  const views = Number(
+    channel.last_post_views || 0
+  );
+
+  const subscribers = Number(
+    channel.subscribers || 1
+  );
+
+  const timestamp = Number(
+    channel.last_post_timestamp || 0
+  );
+
+  if(!timestamp){
+    return 0;
+  }
+
+  const ageHours = (
+    (Date.now() / 1000)
+    -
+    timestamp
+  ) / 3600;
+
+  const maxHours =
+  CONFIG.TRENDING_DAYS * 24;
+
+  if(ageHours > maxHours){
+    return 0;
+  }
+
+  const freshness =
+  1 - (ageHours / maxHours);
+
+  const engagement =
+  views / Math.max(subscribers,1);
+
+  const score =
+
+    (Math.log10(views + 1) * 0.45)
+
+    +
+
+    (engagement * 8)
+
+    +
+
+    (freshness * 4);
+
+  return score;
+
+}
+
+function buildPool(){
+
+  const q = state.filters.search
+  .toLowerCase()
+  .trim();
+
+  let list = state.allChannels.filter(ch => {
+
+    if(!ch.username){
+      return false;
+    }
+
+    const lang =
+    (ch.language || 'other')
+    .toLowerCase();
+
+    if(
+      state.filters.lang !== 'all'
+      &&
+      lang !== state.filters.lang
+    ){
+      return false;
+    }
+
+    if(!q){
+      return true;
+    }
+
+    return (
+
+      (ch.title || '')
+      .toLowerCase()
+      .includes(q)
+
+      ||
+
+      (ch.username || '')
+      .toLowerCase()
+      .includes(q)
+
+    );
+
   });
-  
-  if (lang !== 'all' && sort !== 'trending') {
-    pool = pool.filter(ch => !ch.detectedLang || ch.detectedLang === lang);
+
+  if(state.filters.sort === 'trending'){
+
+    list = list
+    .map(ch => ({
+      ...ch,
+      score:
+      calculateTrendingScore(ch)
+    }))
+    .filter(ch => ch.score > 0)
+    .sort((a,b)=>b.score-a.score);
+
+    const top = list.slice(0,120);
+
+    const rest = list.slice(120);
+
+    list = [
+      ...shuffleSeeded(top),
+      ...shuffleSeeded(rest)
+    ];
+
   }
-  
-  switch (sort) {
-    case 'trending':
-      pool = pool
-        .filter(ch => {
-          const age = (Date.now()/1000 - (ch.last_post_timestamp||0)) / 3600;
-          return age <= CONFIG.TRENDING_MAX_AGE_HOURS;
-        })
-        .sort((a, b) => calculateTrendingScore(b) - calculateTrendingScore(a));
-      break;
-    case 'newest':
-      pool.sort((a, b) => (b.last_post_timestamp||0) - (a.last_post_timestamp||0));
-      break;
-    case 'biggest':
-      pool.sort((a, b) => (b.subscribers||0) - (a.subscribers||0));
-      break;
-    case 'fastgrowing':
-      pool.sort((a, b) => {
-        const rA = (a.last_post_views||0) / Math.max(a.subscribers||1, 1);
-        const rB = (b.last_post_views||0) / Math.max(b.subscribers||1, 1);
-        return rB - rA;
-      });
-      break;
-    case 'hiddengems':
-      pool.sort((a, b) => {
-        const score = (ch) => {
-          const subs = ch.subscribers || 1;
-          return subs >= 50000 ? 0 : (ch.last_post_views||0) / Math.log(subs + 2);
-        };
-        return score(b) - score(a);
-      });
-      break;
-    case 'az':
-      pool.sort((a, b) => (a.title || a.username).localeCompare(b.title || b.username));
-      break;
+
+  else if(state.filters.sort === 'newest'){
+
+    list.sort(
+      (a,b)=>(
+        b.last_post_timestamp || 0
+      ) - (
+        a.last_post_timestamp || 0
+      )
+    );
+
+    list = shuffleSeeded(list);
+
   }
-  return pool;
+
+  else if(state.filters.sort === 'biggest'){
+
+    list.sort(
+      (a,b)=>(
+        b.subscribers || 0
+      ) - (
+        a.subscribers || 0
+      )
+    );
+
+  }
+
+  else if(state.filters.sort === 'fastgrowing'){
+
+    list.sort((a,b)=>{
+
+      const aRate =
+      (a.last_post_views || 0)
+      /
+      Math.max(a.subscribers || 1,1);
+
+      const bRate =
+      (b.last_post_views || 0)
+      /
+      Math.max(b.subscribers || 1,1);
+
+      return bRate - aRate;
+
+    });
+
+  }
+
+  else if(state.filters.sort === 'hiddengems'){
+
+    list.sort((a,b)=>{
+
+      const aScore =
+      (a.subscribers || 1) < 50000
+      ?
+      (a.last_post_views || 0)
+      /
+      Math.log10((a.subscribers || 1)+10)
+      :
+      0;
+
+      const bScore =
+      (b.subscribers || 1) < 50000
+      ?
+      (b.last_post_views || 0)
+      /
+      Math.log10((b.subscribers || 1)+10)
+      :
+      0;
+
+      return bScore - aScore;
+
+    });
+
+  }
+
+  else if(state.filters.sort === 'az'){
+
+    list.sort((a,b)=>
+      (a.title || a.username)
+      .localeCompare(
+        b.title || b.username
+      )
+    );
+
+  }
+
+  state.filteredPool = list;
+
 }
 
-/**
- * 🛡️ NSFW Filter
- */
-function isSafeContent(channel, post) {
-  const content = `${post.text || ''} ${channel.title || ''}`.toLowerCase();
-  return !CONFIG.NSFW_WORDS.some(word => content.includes(word));
-}
+async function fetchChannel(channel){
 
-/**
- * 🌐 Fetch Channel Data - Optimized with dual cache
- */
-async function fetchChannelData(channel) {
-  // 1. Check SmartCache (RAM)
-  const cached = cache.get(channel.username);
-  if (cached) return cached;
-  
-  // 2. Check LocalStorage (Persistent)
-  const stored = StorageCache.get(channel.username);
-  if (stored) {
-    cache.set(channel.username, stored);
-    return stored;
+  if(cache.has(channel.username)){
+    return cache.get(channel.username);
   }
-  
-  const fetchTask = async () => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-    
-    try {
-      const response = await fetch(CONFIG.WORKER_URL + channel.username, {
-        signal: controller.signal,
-        headers: { 'Accept': 'text/html' },
-        cache: 'no-store'
-      });
-      clearTimeout(timeout);
-      
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      
-      const html = await response.text();
-      const post = parseLastPost(html);
-      
-      if (!post || (!post.text && !post.image)) return null;
-      if (!isSafeContent(channel, post)) return null;
-      
-      channel.detectedLang = detectLanguage(post.text);
-      channel.last_post_views = parseViews(post.views);
-      
-      const result = { channel, post };
-      cache.set(channel.username, result);
-      StorageCache.set(channel.username, result);
-      
-      return result;
-    } catch (error) {
-      clearTimeout(timeout);
-      if (error.name !== 'AbortError') {
-        console.warn(`⚠️ ${channel.username}: ${error.message}`);
+
+  try{
+
+    const response = await fetch(
+
+      CONFIG.WORKER_URL + channel.username,
+
+      {
+        signal:
+        AbortSignal.timeout(
+          CONFIG.FETCH_TIMEOUT
+        )
       }
+
+    );
+
+    const html = await response.text();
+
+    const post = parseLastPost(html);
+
+    if(!post){
       return null;
     }
-  };
-  
-  // Priority: trending channels get higher priority
-  const priority = state.filters.sort === 'trending' ? calculateTrendingScore(channel) : 0;
-  return requestQueue.add(fetchTask, priority);
+
+    if(
+      !post.text
+      &&
+      !post.image
+    ){
+      return null;
+    }
+
+    if(!isSafe(channel,post)){
+      return null;
+    }
+
+    const result = {
+      channel,
+      post
+    };
+
+    cache.set(
+      channel.username,
+      result
+    );
+
+    return result;
+
+  }catch(e){
+
+    return null;
+
+  }
+
 }
 
-/**
- * 🎴 Create Post Card
- */
-function createCard(channel, post, trendingRank) {
-  const postUrl = post.postId ? `https://t.me/${post.postId}` : `https://t.me/${channel.username}`;
+function createCard(channel,post,index){
+
+  const postUrl = post.postId
+  ?
+  'https://t.me/' + post.postId
+  :
+  'https://t.me/' + channel.username;
+
   const card = document.createElement('div');
+
   card.className = 'post-card';
-  
-  const initials = (channel.title || channel.username).slice(0,2).toUpperCase();
-  const isTrending = trendingRank && trendingRank <= 10;
-  
+
+  const trendingBadge =
+  state.filters.sort === 'trending'
+  &&
+  index < 10
+  ?
+  `<span class="trending-badge">#${index+1}</span>`
+  :
+  '';
+
   card.innerHTML = `
+
     <div class="post-head">
-      <div class="avatar">${initials}</div>
-      <div class="post-meta">
-        <a class="post-channel" href="https://t.me/${channel.username}" target="_blank">
-          ${channel.title || channel.username}
-          ${isTrending ? `<span class="trending-badge">#${trendingRank}</span>` : ''}
-        </a>
-        <div class="post-date">${formatRelativeTime(post.date)}</div>
+
+      <div class="avatar">
+        ${(channel.title || channel.username)
+        .slice(0,2)
+        .toUpperCase()}
       </div>
-      <a class="open-btn" href="${postUrl}" target="_blank">Open</a>
+
+      <div class="post-meta">
+
+        <a
+        class="post-channel"
+        href="https://t.me/${channel.username}"
+        target="_blank"
+        >
+
+        ${channel.title || channel.username}
+
+        ${trendingBadge}
+
+        </a>
+
+        <div class="post-date">
+          ${formatDate(post.date)}
+        </div>
+
+      </div>
+
+      <a
+      class="open-btn"
+      href="${postUrl}"
+      target="_blank"
+      >
+      Open
+      </a>
+
     </div>
-    ${post.image ? `<img class="post-img" src="${post.image}" loading="lazy" alt="Post">` : ''}
-    ${post.text ? `<div class="post-text">${post.text}</div>` : ''}
+
+    ${
+      post.image
+      ?
+      `<img
+      class="post-img"
+      src="${post.image}"
+      loading="lazy"
+      >`
+      :
+      ''
+    }
+
+    ${
+      post.text
+      ?
+      `<div class="post-text">
+      ${post.text}
+      </div>`
+      :
+      ''
+    }
+
     <div class="post-foot">
-      <span class="stat">👁️ ${post.views || '–'}</span>
-      <button class="copy-btn" data-url="${postUrl}">Copy</button>
+
+      <div class="stat">
+        👁️ ${post.views || 0}
+      </div>
+
+      <button
+      class="copy-btn"
+      data-url="${postUrl}"
+      >
+      Copy
+      </button>
+
     </div>
+
   `;
-  
-  card.querySelector('.copy-btn').addEventListener('click', (e) => {
-    e.preventDefault();
-    const btn = e.currentTarget;
-    navigator.clipboard.writeText(btn.dataset.url);
-    btn.textContent = 'Copied!';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+
+  const copyBtn = card.querySelector(
+    '.copy-btn'
+  );
+
+  copyBtn.addEventListener('click',()=>{
+
+    navigator.clipboard.writeText(
+      copyBtn.dataset.url
+    );
+
+    copyBtn.innerText = 'Copied';
+
+    copyBtn.classList.add('copied');
+
+    setTimeout(()=>{
+
+      copyBtn.innerText = 'Copy';
+
+      copyBtn.classList.remove('copied');
+
+    },1200);
+
   });
-  
+
   return card;
+
 }
 
-/**
- * 📦 Load Batch - With priority & speed optimizations
- */
-async function loadBatch(isFirstBatch = false) {
-  if (state.isLoading || !state.hasMore) return;
-  
-  state.isLoading = true;
-  const spinner = document.getElementById('spinnerWrap');
-  if (!isFirstBatch) spinner.classList.add('active');
-  
-  const { filteredPool } = state;
-  const startIndex = state.currentIndex;
-  
-  // 🚀 First batch: load more items faster
-  const batchSize = isFirstBatch 
-    ? Math.min(Math.floor(CONFIG.BATCH_SIZE * 1.5), 15) 
-    : CONFIG.BATCH_SIZE;
-    
-  const endIndex = Math.min(startIndex + batchSize, filteredPool.length);
-  
-  if (startIndex >= filteredPool.length) {
-    state.hasMore = false;
-    spinner.classList.remove('active');
-    state.isLoading = false;
+async function loadBatch(){
+
+  if(state.isLoading){
     return;
   }
-  
-  let batch = filteredPool.slice(startIndex, endIndex);
-  
-  // 🎯 Priority sort for trending
-  if (state.filters.sort === 'trending') {
-    batch = batch.sort((a, b) => calculateTrendingScore(b) - calculateTrendingScore(a));
+
+  if(!state.hasMore){
+    return;
   }
-  
-  state.currentIndex = endIndex;
-  
-  // 🚀 Parallel fetch with rate limiting
-  const results = await Promise.allSettled(batch.map(ch => fetchChannelData(ch)));
-  
-  const fragment = document.createDocumentFragment();
-  let added = 0;
-  
-  results.forEach((result, idx) => {
-    if (result.status === 'fulfilled' && result.value) {
-      const { channel, post } = result.value;
-      const rank = state.filters.sort === 'trending' ? (startIndex + added + 1) : null;
-      fragment.appendChild(createCard(channel, post, rank));
-      added++;
+
+  state.isLoading = true;
+
+  document
+  .getElementById('spinnerWrap')
+  .classList.add('active');
+
+  const start = state.currentIndex;
+
+  const end = Math.min(
+    start + CONFIG.BATCH_SIZE,
+    state.filteredPool.length
+  );
+
+  const batch = state.filteredPool.slice(
+    start,
+    end
+  );
+
+  state.currentIndex = end;
+
+  const results = [];
+
+  for(
+    let i = 0;
+    i < batch.length;
+    i += CONFIG.CONCURRENT_REQUESTS
+  ){
+
+    const group = batch.slice(
+      i,
+      i + CONFIG.CONCURRENT_REQUESTS
+    );
+
+    const chunk = await Promise.allSettled(
+      group.map(fetchChannel)
+    );
+
+    results.push(...chunk);
+
+  }
+
+  const fragment = document
+  .createDocumentFragment();
+
+  let visibleIndex = start;
+
+  results.forEach(result=>{
+
+    if(
+      result.status === 'fulfilled'
+      &&
+      result.value
+    ){
+
+      fragment.appendChild(
+
+        createCard(
+          result.value.channel,
+          result.value.post,
+          visibleIndex
+        )
+
+      );
+
+      visibleIndex++;
+
     }
+
   });
-  
-  if (added > 0) {
-    document.getElementById('feed').appendChild(fragment);
-    _updateStatusBar();
+
+  document
+  .getElementById('feed')
+  .appendChild(fragment);
+
+  if(
+    state.currentIndex >=
+    state.filteredPool.length
+  ){
+    state.hasMore = false;
   }
-  
-  if (state.currentIndex >= filteredPool.length) state.hasMore = false;
-  
-  const feed = document.getElementById('feed');
-  const empty = document.getElementById('emptyState');
-  empty.style.display = (feed.children.length === 0 && !state.isLoading) ? 'block' : 'none';
-  
-  if (!isFirstBatch) spinner.classList.remove('active');
+
+  document
+  .getElementById('spinnerWrap')
+  .classList.remove('active');
+
   state.isLoading = false;
+
 }
 
-/**
- * 🔄 Apply Filters
- */
-function applyFilters() {
-  state.filteredPool = buildPool();
+function applyFilters(){
+
+  buildPool();
+
   state.currentIndex = 0;
+
   state.hasMore = true;
-  document.getElementById('feed').innerHTML = '';
-  document.getElementById('emptyState').style.display = 'none';
-  loadBatch(true); // Fast first load
+
+  document
+  .getElementById('feed')
+  .innerHTML = '';
+
+  loadBatch();
+
 }
 
-/**
- * 🚀 Quick Start - Show cached content immediately
- */
-async function quickStart() {
-  const cachedKeys = Object.keys(localStorage)
-    .filter(k => k.startsWith('tp_'))
-    .slice(0, 6);
-  
-  if (cachedKeys.length === 0) return false;
-  
-  const fragment = document.createDocumentFragment();
-  let count = 0;
-  
-  for (const key of cachedKeys) {
-    try {
-      const item = JSON.parse(localStorage.getItem(key));
-      if (item && Date.now() - item.timestamp < CONFIG.CACHE_TTL) {
-        const { channel, post } = item.data;
-        // Basic filter check
-        if (state.filters.search && !channel.title?.toLowerCase().includes(state.filters.search)) continue;
-        fragment.appendChild(createCard(channel, post));
-        if (++count >= 4) break;
-      }
-    } catch {}
-  }
-  
-  if (count > 0) {
-    document.getElementById('feed').appendChild(fragment);
-    _updateStatusBar();
-    return true;
-  }
-  return false;
-}
+function debounce(fn,delay){
 
-/**
- * 📊 Status Bar Updates
- */
-function _updateStatusBar() {
-  const bar = document.getElementById('statusBar');
-  const stats = cache.getStats();
-  const queueStats = requestQueue.getStats();
-  
-  document.getElementById('cacheStats').textContent = 
-    `Cache: ${StorageCache.getCount()} (${stats.hitRate}% hit)`;
-  
-  if (state.isLoading) {
-    document.getElementById('statusText').textContent = 
-      `Loading... (${queueStats.active}/${CONFIG.CONCURRENT_REQUESTS})`;
-    bar.style.display = 'flex';
-  } else if (state.filteredPool.length > 0) {
-    document.getElementById('statusText').textContent = 
-      `Showing ${document.getElementById('feed').children.length}/${state.filteredPool.length} posts`;
-    bar.style.display = 'flex';
-  } else {
-    bar.style.display = 'none';
-  }
-}
+  let timer;
 
-/**
- * 🔍 Debounce Helper
- */
-function debounce(func, wait) {
-  let timeout;
-  return (...args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(this, args), wait);
+  return (...args)=>{
+
+    clearTimeout(timer);
+
+    timer = setTimeout(()=>{
+      fn(...args);
+    },delay);
+
   };
-}
-const debouncedSearch = debounce((value) => {
-  state.filters.search = value.toLowerCase().trim();
-  applyFilters();
-}, 250);
 
-/**
- * 🎛️ Event Listeners
- */
-function setupEvents() {
-  document.getElementById('search').addEventListener('input', e => debouncedSearch(e.target.value));
-  document.getElementById('sortSelect').addEventListener('change', e => { state.filters.sort = e.target.value; applyFilters(); });
-  document.getElementById('langSelect').addEventListener('change', e => { 
-    state.filters.lang = e.target.value; 
-    cache.clear(); 
-    applyFilters(); 
+}
+
+const searchDebounced = debounce(value=>{
+
+  state.filters.search = value;
+
+  applyFilters();
+
+},250);
+
+function setupEvents(){
+
+  document
+  .getElementById('search')
+  .addEventListener('input',e=>{
+
+    searchDebounced(
+      e.target.value
+    );
+
   });
-  
-  // Infinite scroll
-  window.addEventListener('scroll', () => {
-    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 800) {
+
+  document
+  .getElementById('sortSelect')
+  .addEventListener('change',e=>{
+
+    state.filters.sort = e.target.value;
+
+    applyFilters();
+
+  });
+
+  document
+  .getElementById('langSelect')
+  .addEventListener('change',e=>{
+
+    state.filters.lang = e.target.value;
+
+    applyFilters();
+
+  });
+
+  window.addEventListener('scroll',()=>{
+
+    if(
+      window.innerHeight
+      +
+      window.scrollY
+      >=
+      document.body.offsetHeight - 1200
+    ){
       loadBatch();
     }
+
   });
-  
-  // Logo click: refresh
-  document.getElementById('logo').addEventListener('click', () => {
-    cache.clear();
-    StorageCache.clear();
-    location.reload();
-  });
-  
-  // Visibility: cleanup
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) cache.cleanup();
-  });
+
 }
 
-/**
- * 🚀 Initialize App
- */
-async function init() {
-  // Try quick start first
-  const quickLoaded = await quickStart();
-  
-  try {
-    const response = await fetch('./channels_data.json');
+async function init(){
+
+  try{
+
+    const response = await fetch(
+      './channels_data.json'
+    );
+
     state.allChannels = await response.json();
-    state.allChannels = state.allChannels.filter(c => c.username);
-  } catch (error) {
-    console.error('Failed to load channels:', error);
+
+    state.allChannels =
+    state.allChannels.filter(
+      ch => ch.username
+    );
+
+  }catch(e){
+
     state.allChannels = [];
+
   }
-  
-  // Defaults
-  document.getElementById('langSelect').value = 'arabic';
-  document.getElementById('sortSelect').value = 'trending';
-  
+
+  document
+  .getElementById('langSelect')
+  .value = 'arabic';
+
+  document
+  .getElementById('sortSelect')
+  .value = 'trending';
+
   setupEvents();
-  
-  if (!quickLoaded) {
-    applyFilters();
-  } else {
-    // Load rest in background
-    setTimeout(applyFilters, 100);
-  }
-  
-  // Periodic cleanup
-  setInterval(() => {
-    cache.cleanup();
-    _updateStatusBar();
-  }, 5 * 60 * 1000);
-  
-  state.initialized = true;
+
+  applyFilters();
+
 }
 
-// Start
 init();
 </script>
+
+
+
+
+  
+
+
+  
+
 </body>
 </html>
