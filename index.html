@@ -531,7 +531,17 @@ function calculateTrendingScore(channel){
   views / subs;
 
   // random shuffle خفيف ثابت
+function shuffleArray(arr){
 
+  return arr
+  .map(v => ({
+    v,
+    r:Math.random()
+  }))
+  .sort((a,b)=>a.r-b.r)
+  .map(x=>x.v);
+
+}
   const randomBoost =
   Math.random() * 0.25;
 
@@ -580,23 +590,33 @@ function buildPool(){
 
   // LANGUAGE FILTER
 
-  if(activeLang !== 'all'){
+if(
 
-    list = list.filter(ch => {
+  activeLang !== 'all'
 
-      if(!ch.detectedLang){
-        return true;
-      }
+  &&
 
-      return (
-        ch.detectedLang
-        ===
-        activeLang
-      );
+  activeSort !== 'trending'
 
-    });
+){
 
-  }
+  list = list.filter(ch => {
+
+    if(!ch.detectedLang){
+      return true;
+    }
+
+    return (
+      ch.detectedLang
+      ===
+      activeLang
+    );
+
+  });
+
+}
+
+  
 
   // TRENDING
 
@@ -614,15 +634,17 @@ function buildPool(){
 
   });
 
-  list.sort((a,b)=>
+ list = shuffleArray(list);
 
-    calculateTrendingScore(b)
+list.sort((a,b)=>
 
-    -
+  calculateTrendingScore(b)
 
-    calculateTrendingScore(a)
+  -
 
-  );
+  calculateTrendingScore(a)
+
+);
 
 }
 
