@@ -233,15 +233,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <option value="random">🔀 Random</option>
     <!-- END CHANGE #5 -->
   </select>
-  <select id="langSelect" class="hdr-select">
-    <option value="all">🌍 All</option>
-    <option value="arabic">🇸🇦 AR</option>
-    <option value="english">🇺🇸 EN</option>
-    <option value="russian">🇷🇺 RU</option>
-    <option value="turkish">🇹🇷 TR</option>
-    <option value="persian">🇮🇷 FA</option>
-    <option value="other">🔡 Other</option>
-  </select>
 </header>
 
 <div class="tags-bar" id="tagsBar"></div>
@@ -271,25 +262,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
   
-<div class="feed" id="feed">
-  <div id="sentinel"></div>
-</div>
+<div class="feed" id="feed"></div>
 <div class="spinner-wrap" id="spinnerWrap"><div class="spinner"></div></div>
 
 <!-- IMPORTANT -->
 <!-- فقط استبدل الجزء ده داخل script -->
 <!-- من أول const WORKER -->
 <!-- لحد boot(); -->
-
 <script>
 
-  function copyPostLink(username){
+function copyPostLink(username, postId){
 
-  const url =
-  `https://t.me/${username}`;
+const url =
+`https://t.me/${username}/${postId}`;
 
-  navigator.clipboard.writeText(url);
+navigator.clipboard.writeText(url);
 
+showToast('Post link copied');
 }
 
 const WORKER =
@@ -298,6 +287,31 @@ const WORKER =
 const BATCH = 20;
 
 const CONCURRENT = 12;
+
+function showToast(text){
+
+let toast =
+document.createElement('div');
+
+toast.innerText = text;
+
+toast.style.position='fixed';
+toast.style.bottom='20px';
+toast.style.left='50%';
+toast.style.transform='translateX(-50%)';
+toast.style.background='#111';
+toast.style.color='#fff';
+toast.style.padding='10px 16px';
+toast.style.borderRadius='999px';
+toast.style.zIndex='99999';
+toast.style.fontSize='13px';
+
+document.body.appendChild(toast);
+
+setTimeout(()=>{
+toast.remove();
+},2000);
+}
 
   const NSFW_WORDS = [
 
@@ -320,14 +334,11 @@ const CONCURRENT = 12;
   'نيك',
   'ممحونة',
   'ممحون',
-  'اباحي',
-  'جنس',
-  'شرموطة',
   'جنس',
      'الشهوة',
-         'شهواني'
-
-
+         'شهواني',
+  'اباحي',
+  'شرموطة'
   // common domains
 
   'xnxx',
@@ -348,9 +359,9 @@ let isLoading = false;
 
 let searchQ = '';
 
-let activeLang = 'arabic';
+let activeLang = 'all';
 
-let activeSort = 'newest';
+
 
 let activeSection = 'trending';
   
@@ -569,6 +580,21 @@ function parseLastPost(html){
 
   }
 
+  let postId = '';
+  const postLinkEl =
+  last.querySelector(
+    '.tgme_widget_message_date'
+  );
+  if (postLinkEl) {
+    const href = postLinkEl.getAttribute('href');
+    const match = href.match(/\/(\d+)\?single/);
+    if (match) {
+      postId = match[1];
+    }
+  }
+
+
+
   return {
 
     text,
@@ -576,10 +602,48 @@ function parseLastPost(html){
     date,
     views
 
+    ,postId
+
   };
 
 }
 
+function extractTags(text){
+
+if(!text) return [];
+
+const clean =
+text
+.replace(/<[^>]*>/g,'')
+.toLowerCase();
+
+const MAP = {
+
+Tech:['ai','python','android','ios','windows','coding','programming'],
+Crypto:['btc','bitcoin','crypto','binance','eth'],
+Movies:['movie','film','netflix','cinema'],
+Games:['pubg','ps5','xbox','gaming'],
+Sports:['football','soccer','fifa','nba'],
+News:['news','breaking','urgent']
+
+};
+
+const found=[];
+
+Object.entries(MAP)
+.forEach(([tag,words])=>{
+if(
+  words.some(
+    w=>clean.includes(w)
+  )
+){
+  found.push(tag);
+}
+});
+
+return found.slice(0,3);
+
+}
 
 // ─────────────────────────────
 // CARD
@@ -638,7 +702,7 @@ function makeCard(channel,post){
       <a
       class="open-btn"
       href="https://t.me/${channel.username}"
-      target="_blank"
+      target="_blank" 
       >
 
       Open
@@ -681,6 +745,42 @@ function makeCard(channel,post){
 
     }
 
+${
+extractTags(post.text)
+.length
+
+?
+
+`<div style="
+ padding:0 14px 12px;
+ display:flex;
+ gap:8px;
+ flex-wrap:wrap;
+">
+
+${
+extractTags(post.text)
+.map(tag=>`
+
+  <span style="
+    background:var(--tag-bg);
+    padding:5px 10px;
+    border-radius:999px;
+    font-size:11px;
+    color:var(--text2);
+  ">
+    #${tag}
+  </span>
+
+`).join('')
+}
+
+  </div>`
+
+:
+
+''
+}
    <div class="post-foot">
 
   <div class="stat">
@@ -693,7 +793,7 @@ function makeCard(channel,post){
 
   <button
   class="copy-btn"
-  onclick="copyPostLink('${channel.username}')"
+  onclick="copyPostLink('${channel.username}', '${channel.last_post_id}')"
   >
     🔗 Copy
   </button>
@@ -821,6 +921,7 @@ if(blocked){
     const result = {
 
       channel,
+      
       post
 
     };
@@ -828,6 +929,7 @@ if(blocked){
     CACHE.set(
       channel.username,
       result
+      ,channel.last_post_id = post.postId
     );
 
     return result;
@@ -920,10 +1022,15 @@ async function loadBatch(){
 
   }
 
+  const sentinel =
+  document.getElementById('sentinel');
+
   document
   .getElementById('feed')
-  .appendChild(fragment);
-
+  .insertBefore(
+  fragment,
+  sentinel
+  );
   isLoading = false;
 
 }
@@ -955,10 +1062,15 @@ function buildPool(){
 
     list.sort((a,b)=>{
 
-      const aScore =
+      const aScore = (
 
-        ((a.last_post_views || 0) * 3)
+        (a.last_post_views || 0) * 3
 
+        +
+
+        (a.last_post_timestamp || 0) / 100000
+
+        )
         +
 
         ((a.subscribers || 0) * 0.15)
@@ -978,8 +1090,15 @@ function buildPool(){
         +
 
         ((b.last_post_timestamp || 0) / 100000);
+      return (
 
-      return bScore - aScore;
+      bScore + Math.random()*2000
+
+      )
+
+      *
+
+      (aScore + Math.random()*2000);
 
     });
 
@@ -1109,7 +1228,7 @@ function buildPool(){
 function initFeed(){
 
   poolIndex = 0;
-
+  
   document
   .getElementById('feed')
   .innerHTML = '';
@@ -1144,17 +1263,6 @@ document
   e.target.value
   .toLowerCase()
   .trim();
-
-  applyFilters();
-
-});
-
-document
-.getElementById('sortSelect')
-.addEventListener('change',e=>{
-
-  activeSort =
-  e.target.value;
 
   applyFilters();
 
@@ -1243,10 +1351,6 @@ async function boot(){
       c=>c.username
     );
 
-  }catch(e){
-
-    allChannels = [];
-
   }
 
   document
@@ -1254,12 +1358,13 @@ async function boot(){
   .value = 'arabic';
 
   document
-  .getElementById('sortSelect')
-  .value = 'newest';
+  .getElementById('langSelect')
+  .value = 'all';
 
   applyFilters();
 
 }
+
 
 boot();
 
