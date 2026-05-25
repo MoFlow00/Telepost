@@ -551,6 +551,28 @@ function buildPool(){
 
   );
 
+  // LANGUAGE FILTER
+
+  if(activeLang !== 'all'){
+
+    list = list.filter(ch => {
+
+      if(!ch.detectedLang){
+        return true;
+      }
+
+      return (
+        ch.detectedLang
+        ===
+        activeLang
+      );
+
+    });
+
+  }
+
+  // TRENDING
+
   if(activeSort === 'trending'){
 
     list.sort((a,b)=>{
@@ -568,7 +590,10 @@ function buildPool(){
       return scoreB - scoreA;
 
     });
+
   }
+
+  // NEWEST
 
   else if(activeSort === 'newest'){
 
@@ -579,7 +604,10 @@ function buildPool(){
       (a.last_post_timestamp || 0)
 
     );
+
   }
+
+  // BIGGEST
 
   else if(activeSort === 'biggest'){
 
@@ -590,7 +618,10 @@ function buildPool(){
       (a.subscribers || 0)
 
     );
+
   }
+
+  // FAST GROWING
 
   else if(activeSort === 'fastgrowing'){
 
@@ -607,8 +638,12 @@ function buildPool(){
       Math.max(b.subscribers || 1,1);
 
       return scoreB - scoreA;
+
     });
+
   }
+
+  // HIDDEN GEMS
 
   else if(activeSort === 'hiddengems'){
 
@@ -633,7 +668,10 @@ function buildPool(){
       return scoreB - scoreA;
 
     });
+
   }
+
+  // A-Z
 
   else if(activeSort === 'az'){
 
@@ -645,10 +683,16 @@ function buildPool(){
       )
 
     );
+
   }
 
   pool = list;
+
 }
+
+
+
+  
 
 function makeCard(channel,post){
 
@@ -804,13 +848,7 @@ async function fetchOne(channel){
     const lang =
     detectLang(post.text || '');
 
-    if(
-      activeLang !== 'all'
-      &&
-      lang !== activeLang
-    ){
-      return null;
-    }
+channel.detectedLang = lang;
 
     channel.last_post_views =
     parseViews(post.views);
