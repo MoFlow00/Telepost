@@ -13,6 +13,8 @@ HEADERS = {
 
 INPUT_FILE = "channels_data.json"
 
+MAX_HISTORY_POSTS = 10
+
 
 # ─────────────────────────────
 # HELPERS
@@ -32,8 +34,6 @@ def parse_number(text):
             .replace(",", "")
         )
 
-        # 1.2K
-
         if "K" in text:
 
             return int(
@@ -41,8 +41,6 @@ def parse_number(text):
                     text.replace("K", "")
                 ) * 1000
             )
-
-        # 2.5M
 
         if "M" in text:
 
@@ -74,8 +72,6 @@ def detect_language(text):
         return "other"
 
     text = text.lower()
-
-    # count chars
 
     arabic_count = sum(
 
@@ -157,8 +153,6 @@ def detect_language(text):
     ):
         return "english"
 
-    # Russian + everything else
-
     return "other"
 
 
@@ -184,21 +178,6 @@ except Exception as e:
     )
 
     channels = []
-
-
-# ─────────────────────────────
-# KEEP HISTORY
-# ─────────────────────────────
-
-old_channels_map = {
-
-    ch.get("username"): ch
-
-    for ch in channels
-
-    if ch.get("username")
-
-}
 
 
 # ─────────────────────────────
@@ -242,8 +221,6 @@ for index, channel in enumerate(channels):
             timeout=15
         )
 
-        # HTTP ERROR
-
         if r.status_code != 200:
 
             print(
@@ -261,10 +238,6 @@ for index, channel in enumerate(channels):
             "html.parser"
         )
 
-        # ─────────────────────────────
-        # POSTS
-        # ─────────────────────────────
-
         posts = soup.select(
             ".tgme_widget_message"
         )
@@ -280,119 +253,9 @@ for index, channel in enumerate(channels):
 
             continue
 
-        # last 2 posts
+        # latest posts
 
-        last_posts = posts[-2:]
-
-        # ─────────────────────────────
-        # LAST POST
-        # ─────────────────────────────
-
-        last = last_posts[-1]
-
-        # ─────────────────────────────
-        # POST ID
-        # ─────────────────────────────
-
-        data_post = last.get(
-            "data-post"
-        )
-
-        if not data_post:
-
-            print(
-                "NO POST ID:",
-                username
-            )
-
-            updated_channels.append(channel)
-
-            continue
-
-        try:
-
-            post_id = int(
-                data_post
-                .split("/")[-1]
-            )
-
-        except Exception:
-
-            print(
-                "BAD POST ID:",
-                username
-            )
-
-            updated_channels.append(channel)
-
-            continue
-
-        # ─────────────────────────────
-        # DATE
-        # ─────────────────────────────
-
-        time_el = last.select_one(
-            "time"
-        )
-
-        post_date = None
-
-        if time_el:
-
-            post_date = (
-                time_el.get(
-                    "datetime"
-                )
-            )
-
-        # ─────────────────────────────
-        # TIMESTAMP
-        # ─────────────────────────────
-
-        timestamp = 0
-
-        if post_date:
-
-            try:
-
-                timestamp = int(
-
-                    datetime
-                    .fromisoformat(
-
-                        post_date.replace(
-                            "Z",
-                            "+00:00"
-                        )
-
-                    )
-                    .timestamp()
-
-                )
-
-            except Exception as e:
-
-                print(
-                    "BAD DATE:",
-                    username,
-                    e
-                )
-
-        # ─────────────────────────────
-        # VIEWS
-        # ─────────────────────────────
-
-        views = 0
-
-        views_el = last.select_one(
-            ".tgme_widget_message_views"
-        )
-
-        if views_el:
-
-            views = parse_number(
-                views_el.text
-            )
+        latest_posts = posts[-2:]
 
         # ─────────────────────────────
         # SUBSCRIBERS
@@ -445,12 +308,57 @@ for index, channel in enumerate(channels):
                     break
 
         # ─────────────────────────────
-        # LAST 2 POSTS TEXT
+        # OLD HISTORY
         # ─────────────────────────────
 
-        last_posts_text = []
+        old_history = channel.get(
+            "posts_history",
+            []
+        )
 
-        for p in last_posts:
+        if not isinstance(
+            old_history,
+            list
+        ):
+            old_history = []
+
+        existing_ids = {
+
+            p.get("post_id")
+
+            for p in old_history
+
+            if p.get("post_id")
+
+        }
+
+        new_posts = []
+
+        # ─────────────────────────────
+        # PROCESS POSTS
+        # ─────────────────────────────
+
+        for p in latest_posts:
+
+            try:
+
+                data_post = p.get(
+                    "data-post",
+                    ""
+                )
+
+                post_id = int(
+                    data_post
+                    .split("/")[-1]
+                )
+
+            except Exception:
+
+                continue
+
+            # text
+
+            post_text = ""
 
             txt = p.select_one(
                 ".tgme_widget_message_text"
@@ -458,24 +366,158 @@ for index, channel in enumerate(channels):
 
             if txt:
 
-                clean_text = txt.get_text(
+                post_text = txt.get_text(
                     " ",
                     strip=True
+                )[:1500]
+
+            # date
+
+            post_date = ""
+
+            timestamp = 0
+
+            time_el = p.select_one(
+                "time"
+            )
+
+            if time_el:
+
+                post_date = (
+                    time_el.get(
+                        "datetime"
+                    ) or ""
                 )
 
-                if clean_text:
+                try:
 
-                    last_posts_text.append(
-                        clean_text[:500]
+                    timestamp = int(
+
+                        datetime
+                        .fromisoformat(
+
+                            post_date.replace(
+                                "Z",
+                                "+00:00"
+                            )
+
+                        )
+                        .timestamp()
+
                     )
 
-        combined_text = " ".join(
-            last_posts_text
+                except Exception:
+
+                    timestamp = 0
+
+            # views
+
+            views = 0
+
+            views_el = p.select_one(
+                ".tgme_widget_message_views"
+            )
+
+            if views_el:
+
+                views = parse_number(
+                    views_el.text
+                )
+
+            # image
+
+            image = ""
+
+            img_wrap = p.select_one(
+                ".tgme_widget_message_photo_wrap"
+            )
+
+            if img_wrap:
+
+                style = (
+                    img_wrap.get(
+                        "style",
+                        ""
+                    )
+                )
+
+                if "url(" in style:
+
+                    try:
+
+                        image = (
+                            style
+                            .split("url('")[1]
+                            .split("')")[0]
+                        )
+
+                    except Exception:
+
+                        pass
+
+            # append only new posts
+
+            if post_id not in existing_ids:
+
+                new_posts.append({
+
+                    "post_id":
+                    post_id,
+
+                    "text":
+                    post_text,
+
+                    "date":
+                    post_date,
+
+                    "timestamp":
+                    timestamp,
+
+                    "views":
+                    views,
+
+                    "image":
+                    image
+
+                })
+
+        # ─────────────────────────────
+        # MERGE HISTORY
+        # ─────────────────────────────
+
+        full_history = (
+            new_posts
+            +
+            old_history
         )
+
+        full_history.sort(
+
+            key=lambda x:
+            x.get(
+                "timestamp",
+                0
+            ),
+
+            reverse=True
+
+        )
+
+        full_history = full_history[
+            :MAX_HISTORY_POSTS
+        ]
 
         # ─────────────────────────────
         # LANGUAGE
         # ─────────────────────────────
+
+        combined_text = " ".join([
+
+            p.get("text", "")
+
+            for p in full_history[:2]
+
+        ])
 
         language = detect_language(
             combined_text
@@ -488,24 +530,38 @@ for index, channel in enumerate(channels):
             language = "other"
 
         # ─────────────────────────────
-        # SAVE
+        # LAST POST
         # ─────────────────────────────
+
+        latest = full_history[0]
 
         channel[
             "last_post_id"
-        ] = post_id
+        ] = latest.get(
+            "post_id",
+            0
+        )
 
         channel[
             "last_post_date"
-        ] = post_date
+        ] = latest.get(
+            "date",
+            ""
+        )
 
         channel[
             "last_post_timestamp"
-        ] = timestamp
+        ] = latest.get(
+            "timestamp",
+            0
+        )
 
         channel[
             "last_post_views"
-        ] = views
+        ] = latest.get(
+            "views",
+            0
+        )
 
         channel[
             "subscribers"
@@ -517,9 +573,21 @@ for index, channel in enumerate(channels):
 
         channel[
             "last_posts_text"
-        ] = last_posts_text
+        ] = [
 
-        updated_channels.append(channel)
+            p.get("text", "")
+
+            for p in full_history[:2]
+
+        ]
+
+        channel[
+            "posts_history"
+        ] = full_history
+
+        updated_channels.append(
+            channel
+        )
 
         print(
 
@@ -527,11 +595,8 @@ for index, channel in enumerate(channels):
 
             username,
 
-            "| POSTS:",
-            post_id,
-
-            "| VIEWS:",
-            views,
+            "| HISTORY:",
+            len(full_history),
 
             "| SUBS:",
             subscribers,
@@ -581,51 +646,12 @@ for index, channel in enumerate(channels):
 
 
 # ─────────────────────────────
-# CLEAN + MERGE HISTORY
+# REMOVE DEAD CHANNELS
 # ─────────────────────────────
 
 merged = []
 
 for ch in updated_channels:
-
-    username = ch.get("username")
-
-    old = old_channels_map.get(
-        username,
-        {}
-    )
-
-    # preserve old data
-
-    if not ch.get("last_posts_text"):
-
-        ch["last_posts_text"] = old.get(
-            "last_posts_text",
-            []
-        )
-
-    if not ch.get("language"):
-
-        ch["language"] = old.get(
-            "language",
-            "other"
-        )
-
-    if not ch.get("subscribers"):
-
-        ch["subscribers"] = old.get(
-            "subscribers",
-            0
-        )
-
-    if not ch.get("last_post_views"):
-
-        ch["last_post_views"] = old.get(
-            "last_post_views",
-            0
-        )
-
-    # remove dead channels
 
     if ch.get(
         "last_post_timestamp",
